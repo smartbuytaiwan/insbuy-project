@@ -574,7 +574,7 @@
     // 這裡替換成您的 Supabase 設定
     const supabaseUrl = 'https://robgmhyjdfizzxdddqzr.supabase.co';
     const supabaseKey = '您sb_publishable_WlEj-PHW5HuMZ94HXNJYyA_pKYERes4';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     Vue.createApp({
        data() {
