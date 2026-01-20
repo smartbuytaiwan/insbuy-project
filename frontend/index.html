@@ -619,11 +619,11 @@
            availableShippingOptions() { let options = []; if (this.cart.length > 0) { let firstItemRules = this.cart[0].shippingRules || []; firstItemRules.forEach(rule => { let totalFee = 0; this.cart.forEach(cartItem => { totalFee += this.calculateItemShipping(cartItem, rule.name); }); if (rule.name) { options.push({ name: rule.name, totalFee: totalFee, ruleDesc: '每 ' + rule.limit + ' 件 $' + rule.fee }); } }); } return options; }
        },
        methods: {
-           formatNumber(num) { return (num || 0).toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, ","); },
+           formatNumber(num) { return (num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); },
            getProgress(item) { if (!item.TargetAmount || item.TargetAmount <= 0) return 0; return Math.floor(((item.CurrentAmount || 0) / item.TargetAmount) * 100); },
            goToOfficialShop() { window.location.href = window.location.origin + window.location.pathname + '?shopId=S001'; },
            
-           // API 呼叫轉換
+           // API 呼叫
            async callApi(endpoint, payload) {
                this.loading = true;
                if(!payload.shopId && this.currentShopId) payload.shopId = this.currentShopId;
@@ -657,7 +657,7 @@
                }
            },
 
-           // 圖片上傳
+           // 圖片上傳 (使用 supabaseClient)
            async handleFileUpload(ev) {
                var self = this, files = ev.target.files;
                if (!files || files.length === 0) return;
@@ -666,10 +666,11 @@
                var uploadPromises = Array.from(files).map(file => {
                    return new Promise(async (resolve) => {
                        const fileName = 'products/' + Date.now() + '_' + file.name;
-                       const { data, error } = await supabase.storage.from('product-images').upload(fileName, file);
+                       // 【修正點】改用 supabaseClient
+                       const { data, error } = await supabaseClient.storage.from('product-images').upload(fileName, file);
                        if (error) { resolve(null); } 
                        else {
-                           const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                           const { data: { publicUrl } } = supabaseClient.storage.from('product-images').getPublicUrl(fileName);
                            resolve(publicUrl);
                        }
                    });
@@ -678,11 +679,26 @@
                Promise.all(uploadPromises).then(urls => {
                    var validUrls = urls.filter(u => u !== null);
                    if (validUrls.length > 0) {
-                       var newUrls = validUrls.join('\\n');
-                       self.newProduct.images = self.newProduct.images ? self.newProduct.images + '\\n' + newUrls : newUrls;
+                       var newUrls = validUrls.join('\n');
+                       self.newProduct.images = self.newProduct.images ? self.newProduct.images + '\n' + newUrls : newUrls;
                    }
                    self.submitting = false;
                    ev.target.value = ''; 
+               });
+           },
+
+           // Logo上傳 (使用 supabaseClient)
+           handleLogoUpload(ev) { 
+               var self = this, f = ev.target.files[0]; 
+               if(!f) return; 
+               self.submitting = true;
+               const fileName = 'logos/' + Date.now() + '_' + f.name;
+               // 【修正點】改用 supabaseClient
+               supabaseClient.storage.from('product-images').upload(fileName, f).then(({data, error}) => {
+                   if(error) { alert('上傳失敗'); self.submitting=false; return; }
+                   const { data: { publicUrl } } = supabaseClient.storage.from('product-images').getPublicUrl(fileName);
+                   self.shopLogo = publicUrl;
+                   self.submitting = false;
                });
            },
 
@@ -740,7 +756,7 @@
            },
 
            // 其他方法
-           onDurationChange() { var maxDays = this.currentRules.maxDays || 1; var selectedVal = parseInt(this.durationSelect); if(this.durationSelect === 'custom') { this.newProduct.duration = ''; } else { if (selectedVal > maxDays) { if(confirm('您的等級目前最多只能開團 ' + maxDays + ' 天。\\n想要開更久嗎？點擊確定前往升級方案。')) { window.open(window.location.origin + window.location.pathname + '?shopId=S001', '_blank'); } this.durationSelect = '1'; this.newProduct.duration = '1'; } else { this.newProduct.duration = this.durationSelect; } } },
+           onDurationChange() { var maxDays = this.currentRules.maxDays || 1; var selectedVal = parseInt(this.durationSelect); if(this.durationSelect === 'custom') { this.newProduct.duration = ''; } else { if (selectedVal > maxDays) { if(confirm('您的等級目前最多只能開團 ' + maxDays + ' 天。\n想要開更久嗎？點擊確定前往升級方案。')) { window.open(window.location.origin + window.location.pathname + '?shopId=S001', '_blank'); } this.durationSelect = '1'; this.newProduct.duration = '1'; } else { this.newProduct.duration = this.durationSelect; } } },
            selectVariant(v, idx) { if(parseInt(v.stock) > 0) { this.orderForm.variantIdx = idx; this.$forceUpdate(); } },
            selectShippingMethod(opt) { if(opt.name === '面交') { this.checkoutForm.shippingMethodName = '面交'; this.checkoutForm.isFaceToFace = true; } else { this.checkoutForm.shippingMethodName = opt.name; this.checkoutForm.isFaceToFace = false; } },
            handleNav(target) { this.view = target; window.scrollTo(0,0); },
@@ -761,7 +777,7 @@
            clickTitle() { this.goToOfficialShop(); },
            copyShopLink() { const url = window.location.origin + window.location.pathname + '?shopId=' + this.currentShopId; this.copyText(url); },
            copyProductLink(item) { const url = window.location.origin + window.location.pathname + '?shopId=' + this.currentShopId + '&productId=' + item.ProductID; this.copyText(url); alert('商品連結已複製'); },
-           openSheet() { if(this.sheetId) { window.open('https://docs.google.com/spreadsheets/d/' + this.sheetId, '_blank'); } else { alert('找不到報表連結'); } },
+           openSheet() { alert('現在改用 Supabase，所有數據都在雲端後台。'); },
            showToast(msg) { var t = document.getElementById("toast"); t.innerText = msg; t.classList.remove("hidden"); setTimeout(function() { t.classList.add("hidden"); }, 1500); },
            copyText(text) { navigator.clipboard.writeText(text).then(() => { var t = document.getElementById("toast"); t.classList.remove("hidden"); setTimeout(() => { t.classList.add("hidden"); }, 1500); }); },
            addQuestion() { this.newProduct.questions.push({ title: '', required: false }); },
@@ -818,7 +834,7 @@
                 self.callApi('submitOrder', payload).then(function(d) {
                     self.submitting = false; 
                     if(d.status==='success') { alert('訂單建立成功！編號: ' + d.orderId); self.cart = []; self.checkoutForm = { name: '', phone: '', address: '', shippingMethodName: '', isFaceToFace: false, meetTime: '', last5: '', note: '' }; self.view = 'shop'; self.fetchProducts(); window.scrollTo(0,0); } 
-                    else if(d.errors) { alert('下單失敗：\\n' + d.errors.join('\\n')); }
+                    else if(d.errors) { alert('下單失敗：\n' + d.errors.join('\n')); }
                     else { alert(d.msg); }
                 });
            },
@@ -828,7 +844,6 @@
                  var self = this; self.submitting = true; 
                  if(self.newProduct.bank && self.newProduct.bank.account) { localStorage.setItem('savedBank', JSON.stringify(self.newProduct.bank)); }
                  var payload = Object.assign({ productId: self.isEditing ? self.editingProductId : null }, self.newProduct);
-                 // 修正：必須帶上 shopId
                  payload.shopId = self.currentShopId;
                  self.callApi('createProduct', payload).then(function(data) {
                      if(data.status==='success') { alert(data.msg); self.fetchProducts(); self.isEditing=false; self.resetForm(); } else { alert(data.msg); }
@@ -836,9 +851,9 @@
                  });
            },
            removeImage(index) {
-               var imgs = this.newProduct.images.split('\\n');
+               var imgs = this.newProduct.images.split('\n');
                imgs.splice(index, 1);
-               this.newProduct.images = imgs.join('\\n');
+               this.newProduct.images = imgs.join('\n');
            },
            toggleRegistration() { var self = this; var newStatus = (self.registrationStatus === 'OPEN') ? 'CLOSED' : 'OPEN'; self.submitting = true; self.callApi('toggleRegistration', {shopId: self.currentShopId, status: newStatus}).then(function(d) { if(d.status === 'success') { self.registrationStatus = newStatus; } else { alert(d.msg); } self.submitting = false; }); },
            getSystemStatus() { var self = this; this.callApi('getSystemStatus', {}).then(d=>{ if(d.status==='success') self.registrationStatus = d.registration; }); },
@@ -856,24 +871,7 @@
            addShippingRule(type) { if(type === '其他') { this.newProduct.shipping.push({name: '', fee: '', limit: ''}); } else if (type === '面交') { if(!this.newProduct.shipping.some(s=>s.name==='面交')) { this.newProduct.shipping.push({name: '面交', fee: 0, limit: 1}); } } else { var fee = ''; if(type === '宅配') fee = ''; this.newProduct.shipping.push({name: type, fee: fee, limit: ''}); } },
            addVariant() { if (this.adminLevel == 1 && this.newProduct.variants.length >= 1) { return this.checkUpgrade('新增更多規格'); } this.newProduct.variants.push({name:'', price:'', stock:'', isVip: false}); },
            handleLoginClick() { this.goToAdmin(); },
-           handleLogoUpload(ev) { 
-               var self = this, f = ev.target.files[0]; 
-               if(!f) return; 
-               self.submitting = true;
-               const fileName = 'logos/' + Date.now() + '_' + f.name;
-               supabase.storage.from('product-images').upload(fileName, f).then(({data, error}) => {
-                   if(error) { alert('上傳失敗'); self.submitting=false; return; }
-                   const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(fileName);
-                   self.shopLogo = publicUrl;
-                   self.submitting = false;
-               });
-           },
            updateShopSettings() { var self = this; self.submitting = true; self.callApi('updateShopInfo', {shopId: self.currentShopId, shopName: self.shopName, shopLogo: self.shopLogo}).then(function(d) { alert(d.msg); self.submitting = false; }); },
-           copyText(text) { navigator.clipboard.writeText(text).then(() => { var t = document.getElementById("toast"); t.classList.remove("hidden"); setTimeout(() => { t.classList.add("hidden"); }, 1500); }); },
-           copyShopLink() { const url = window.location.origin + window.location.pathname + '?shopId=' + this.currentShopId; this.copyText(url); },
-           copyProductLink(item) { const url = window.location.origin + window.location.pathname + '?shopId=' + this.currentShopId + '&productId=' + item.ProductID; this.copyText(url); alert('商品連結已複製'); },
-           openSheet() { alert('現在改用 Supabase，所有數據都在雲端後台。'); },
-           showToast(msg) { var t = document.getElementById("toast"); t.innerText = msg; t.classList.remove("hidden"); setTimeout(function() { t.classList.add("hidden"); }, 1500); },
            
            updateCountdown() {
                 var now = new Date();
@@ -896,7 +894,7 @@
            processProducts(data) {
                 if(!Array.isArray(data)) { this.products = []; return; }
                 this.products = data.map(function(p) {
-                    var imgs = (p.Images && typeof p.Images === 'string') ? p.Images.split(/\\r?\\n/) : [];
+                    var imgs = (p.Images && typeof p.Images === 'string') ? p.Images.split(/\r?\n/) : [];
                     try { p.isExpired = new Date(p.EndTime) < new Date(); } catch(e){ p.isExpired = false; }
                     var per = 0; if(p.TargetAmount>0) { per = Math.floor((p.CurrentAmount/p.TargetAmount)*100); }
                     p.imagesList = imgs; p.progressPercent = per; 
@@ -907,6 +905,14 @@
                     p.shippingFee = p.shippingRules.length>0 ? p.shippingRules[0].fee : 0; p.remainingTime = ''; p.faceToFaceAddress = p.FaceToFaceAddress || '';
                     return p;
                 });
+           },
+           editProduct(item) { this.isEditing = true; this.editingProductId = item.ProductID; this.newProduct = { name: item.ProductName, description: item.Description, images: item.imagesList.join('\n'), duration: '1', targetAmount: item.TargetAmount, price: item.Price, originalPrice: item.OriginalPrice, shipping: JSON.parse(JSON.stringify(item.shippingRules)), bank: JSON.parse(JSON.stringify(item.bankInfo)), variants: JSON.parse(JSON.stringify(item.variants)), faceToFaceAddress: item.faceToFaceAddress, questions: JSON.parse(JSON.stringify(item.Questions || [])) }; if(this.commonBanks.includes(item.bankInfo.name)) { this.selectedBank = item.bankInfo.name; } else if (item.bankInfo.name) { this.selectedBank = 'Other'; } document.getElementById('adminForm').scrollIntoView({behavior: 'smooth'}); },
+           openProductDetail(item) { 
+               this.selectedProduct = item; 
+               this.currentPreviewImage = item.imagesList[0] || ''; 
+               this.orderForm = { variantIdx: (item.variants && item.variants.length > 0) ? -1 : -2, qty: 1, answers: {} }; 
+               this.view = 'product'; 
+               window.scrollTo(0,0); 
            }
        },
        mounted() {
