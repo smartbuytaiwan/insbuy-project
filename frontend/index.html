@@ -52,9 +52,10 @@
     .card { @apply bg-white p-5 rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-50 mb-4; }
     .section-header { @apply flex items-center gap-2 mb-4 pb-3 border-b border-slate-50; }
     .section-title { @apply font-bold text-slate-800 text-lg; }
+    
     .tag-btn { @apply border border-slate-200 bg-slate-50 text-slate-500 rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-200 cursor-pointer active:scale-95 select-none hover:bg-white hover:border-slate-300; }
     .tag-btn.active { @apply border-rose-500 bg-rose-50 text-rose-600 shadow-sm; }
-    
+
     .safe-pb { padding-bottom: calc(env(safe-area-inset-bottom) + 100px); }
     .back-btn { @apply absolute top-3 left-3 z-50 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center backdrop-blur-md shadow-md active:scale-90 transition border border-slate-100; }
     .share-btn { @apply absolute top-3 right-3 z-50 w-10 h-10 bg-white/90 text-rose-600 rounded-full flex items-center justify-center backdrop-blur-md shadow-md active:scale-90 transition border border-rose-100; }
@@ -195,32 +196,6 @@
         <div v-else class="text-center py-20 text-slate-300"><i class="fa-solid fa-box-open text-4xl mb-3"></i><p class="text-sm font-bold">此區無商品</p></div>
     </div>
 
-    <div v-if="view === 'admin-vip'" class="p-4 safe-pb bg-gray-50 min-h-screen">
-        <div class="card">
-            <div class="section-header"><i class="fa-solid fa-magnifying-glass mr-2 text-blue-500"></i><span class="section-title text-sm">搜尋商家</span></div>
-            <div class="flex gap-2 mb-3"><input v-model="searchQuery" class="input-box h-10 text-sm" placeholder="輸入Email或名稱..."></div>
-            <div class="max-h-60 overflow-y-auto space-y-2">
-                <div v-for="shop in filteredShops" :key="shop.shop_id" class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100">
-                    <div class="truncate flex-1 mr-2"><div class="font-bold text-sm text-slate-700">{{ shop.name }}</div><div class="text-[10px] text-slate-400">{{ shop.email }}</div></div>
-                    <input type="number" v-model.number="shop.level" @change="updateShopLevel(shop)" class="input-box w-16 h-8 text-center text-sm">
-                </div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="section-header"><i class="fa-solid fa-sliders mr-2 text-purple-500"></i><span class="section-title text-sm">VIP 規則設定</span></div>
-            <div v-for="config in levelConfigs" :key="config.level_id" class="mb-5 pb-5 border-b border-slate-100 last:border-0 last:pb-0">
-                <div class="flex justify-between items-center mb-3"><span class="font-black text-rose-600 bg-rose-50 px-3 py-1 rounded-full text-xs">{{ config.level_name }} (Lv.{{config.level_id}})</span></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="input-label">上架上限</label><input v-model.number="config.max_products" type="number" class="input-box h-10 text-sm"></div>
-                    <div><label class="input-label">圖片上限</label><input v-model.number="config.max_images" type="number" class="input-box h-10 text-sm"></div>
-                    <div><label class="input-label">規格上限</label><input v-model.number="config.max_variants" type="number" class="input-box h-10 text-sm"></div>
-                    <div><label class="input-label">天數上限</label><input v-model.number="config.max_duration" type="number" class="input-box h-10 text-sm"></div>
-                </div>
-            </div>
-            <button @click="saveLevelConfigs" class="btn-main h-12 text-sm bg-gradient-to-r from-purple-500 to-indigo-600">儲存設定</button>
-        </div>
-    </div>
-
     <div v-if="view === 'admin-create'" class="bg-[#F8FAFC] min-h-screen pb-10">
         <div class="p-4 space-y-4">
             <div class="card">
@@ -242,12 +217,12 @@
                     <div><label class="input-label text-rose-600">團購價</label><div class="money-wrapper"><span class="money-symbol">$</span><input v-model="newProduct.price" type="number" class="input-box money-input"></div></div>
                     <div><label class="input-label text-slate-400">原價</label><div class="money-wrapper"><span class="money-symbol">$</span><input v-model="newProduct.originalPrice" type="number" class="input-box money-input !text-slate-400"></div></div>
                 </div>
-                <div class="mb-4"><label class="input-label text-slate-600">商品庫存 (總數)</label><input v-model="newProduct.stock" type="number" class="input-box text-center font-bold text-slate-700" placeholder="設定商品總數量"></div>
+                <div class="mb-4"><label class="input-label text-slate-600">商品庫存 (未開規格時使用)</label><input v-model="newProduct.stock" type="number" class="input-box text-center font-bold text-slate-700" placeholder="設定商品庫存"></div>
                 
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <div class="flex justify-between items-center mb-3"><span class="text-sm font-bold text-slate-600">規格列表 ({{newProduct.variants.length}}/{{ currentLevelConfig.max_variants }})</span><button @click="addVariant" class="text-xs bg-white border px-3 py-1 rounded-lg shadow-sm font-bold text-rose-500">+ 新增</button></div>
                     <div class="space-y-2">
-                        <div v-for="(v, idx) in newProduct.variants" :key="idx" class="flex gap-2 items-center"><input v-model="v.name" class="input-box h-10 text-sm" placeholder="規格名"><input v-model="v.price" type="number" class="input-box h-10 text-sm w-20 text-center" placeholder="+加價"><i @click="newProduct.variants.splice(idx,1)" class="fa-solid fa-trash text-slate-300 p-2 hover:text-red-500 cursor-pointer"></i></div>
+                        <div v-for="(v, idx) in newProduct.variants" :key="idx" class="flex gap-2 items-center"><input v-model="v.name" class="input-box h-10 text-sm" placeholder="規格名"><input v-model="v.price" type="number" class="input-box h-10 text-sm w-20 text-center" placeholder="+加價"><input v-model="v.stock" type="number" class="input-box h-10 text-sm w-16 text-center" placeholder="庫存"><i @click="newProduct.variants.splice(idx,1)" class="fa-solid fa-trash text-slate-300 p-2 hover:text-red-500 cursor-pointer"></i></div>
                     </div>
                 </div>
             </div>
@@ -278,7 +253,7 @@
             </div>
 
             <div class="card">
-                <div class="section-header"><i class="fa-solid fa-gear text-rose-500 mr-2"></i><span class="section-title">規則設定</span></div>
+                <div class="section-header"><i class="fa-solid fa-gear text-rose-500 mr-2"></i><span class="section-title">規則與收款</span></div>
                 <div class="grid grid-cols-2 gap-4 mb-4 items-end">
                     <div><label class="input-label">開團天數</label><select v-model="newProduct.duration" class="input-box bg-white"><option value="1">1 天</option><option value="3">3 天</option><option value="5">5 天</option><option value="7">7 天</option><option value="15" v-if="currentLevelConfig.max_duration >= 15">15 天</option><option value="30" v-if="currentLevelConfig.max_duration >= 30">30 天</option></select></div>
                     <div><label class="input-label">目標金額</label><div class="money-wrapper"><span class="money-symbol">$</span><input v-model="newProduct.targetAmount" type="number" class="input-box money-input !text-slate-500" placeholder="0"></div></div>
@@ -302,6 +277,11 @@
             </div>
         </div>
         <div v-else class="text-center py-20 text-slate-400">無訂單</div>
+    </div>
+
+    <div v-if="view === 'admin-vip'" class="p-4 safe-pb bg-gray-50 min-h-screen">
+        <div class="card"><div class="section-header"><i class="fa-solid fa-magnifying-glass mr-2 text-blue-500"></i><span class="section-title text-sm">搜尋商家</span></div><div class="flex gap-2 mb-3"><input v-model="searchQuery" class="input-box h-10 text-sm" placeholder="輸入Email或名稱..."></div><div class="max-h-60 overflow-y-auto space-y-2"><div v-for="shop in filteredShops" :key="shop.shop_id" class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100"><div class="truncate flex-1 mr-2"><div class="font-bold text-sm text-slate-700">{{ shop.name }}</div><div class="text-[10px] text-slate-400">{{ shop.email }}</div></div><input type="number" v-model.number="shop.level" @change="updateShopLevel(shop)" class="input-box w-16 h-8 text-center text-sm"></div></div></div>
+        <div class="card"><div class="section-header"><i class="fa-solid fa-sliders mr-2 text-purple-500"></i><span class="section-title text-sm">VIP 規則設定</span></div><div v-for="config in levelConfigs" :key="config.level_id" class="mb-5 pb-5 border-b border-slate-100 last:border-0 last:pb-0"><div class="flex justify-between items-center mb-3"><span class="font-black text-rose-600 bg-rose-50 px-3 py-1 rounded-full text-xs">{{ config.level_name }} (Lv.{{config.level_id}})</span></div><div class="grid grid-cols-2 gap-4"><div><label class="input-label">上架上限</label><input v-model.number="config.max_products" type="number" class="input-box h-10 text-sm"></div><div><label class="input-label">圖片上限</label><input v-model.number="config.max_images" type="number" class="input-box h-10 text-sm"></div><div><label class="input-label">規格上限</label><input v-model.number="config.max_variants" type="number" class="input-box h-10 text-sm"></div><div><label class="input-label">天數上限</label><input v-model.number="config.max_duration" type="number" class="input-box h-10 text-sm"></div></div></div><button @click="saveLevelConfigs" class="btn-main h-12 text-sm">儲存設定</button></div>
     </div>
 
     <div v-if="view === 'cart'" class="bg-[#F8FAFC] min-h-screen pb-40">
@@ -351,6 +331,7 @@
                 isEditing: false,
                 editingProductId: null,
                 editingProductStatus: '',
+                // 修正：補齊 stock 初始值
                 newProduct: { name: '', description: '', images: '', price: '', originalPrice: '', stock: '', variants: [{name:'', price:'', stock:''}], shipping: [], duration: '7', targetAmount: '', bank: { name: '', account: '' }, questions: [] },
                 selectedProduct: null,
                 orderForm: { variant: '', qty: 1 },
@@ -431,7 +412,7 @@
 
             goToCreateProduct() { this.resetForm(); this.isEditing = false; this.view = 'admin-create'; },
             
-            // 修復：resetForm 定義在 methods 內
+            // 核心修復：補回 resetForm 方法
             resetForm() {
                 this.newProduct = { 
                     name: '', description: '', images: '', price: '', originalPrice: '', stock: '', 
@@ -454,8 +435,9 @@
                 endDate.setDate(endDate.getDate() + parseInt(this.newProduct.duration));
                 if(this.saveBankInfo) localStorage.setItem('savedBank', JSON.stringify(this.newProduct.bank));
 
+                // 庫存邏輯：若有規格則加總，否則用手動輸入
                 let calculatedStock = Number(this.newProduct.stock);
-                if (!calculatedStock && this.newProduct.variants.length > 0) {
+                if (this.newProduct.variants.length > 0 && this.newProduct.variants[0].name !== '') {
                     calculatedStock = this.newProduct.variants.reduce((acc,v)=>acc+parseInt(v.stock||0), 0);
                 }
 
@@ -551,7 +533,7 @@
                 if(!this.newProduct.shipping.some(s=>s.name===type)) this.newProduct.shipping.push({name: type, fee: null, limit: null}); 
             },
             addVariant() { this.newProduct.variants.push({name:'', price:'', stock:''}); },
-            addQuestion() { this.newProduct.questions.push({ title: '', required: true }); }, // 修復提問功能
+            addQuestion() { this.newProduct.questions.push({ title: '', required: true }); }, // 修復提問
             updateBankInfo() { this.newProduct.bank.name = this.selectedBankName; },
             
             goToAdmin() { 
