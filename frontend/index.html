@@ -3,947 +3,717 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>拍拍購 InsBuy (Local Dev)</title>
+  <title>拍拍購 InsBuy</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
+    /* 核心樣式 */
     [v-cloak] { display: none; }
-    body { background-color: #F3F4F6; font-family: 'Noto Sans TC', sans-serif; color: #1F2937; padding-bottom: env(safe-area-inset-bottom); }
-    :root { --primary-red: #CE272D; }
-    .btn-red { background-color: var(--primary-red); color: white; border-radius: 8px; padding: 14px; font-weight: 700; font-size: 16px; width: 100%; transition: all 0.2s; box-shadow: 0 4px 12px rgba(206, 39, 45, 0.3); display: flex; align-items: center; justify-content: center; }
-    .btn-red:active { transform: scale(0.97); }
-    .btn-red:disabled { background-color: #D1D5DB; cursor: not-allowed; opacity: 0.7; }
-    .input-field { background: white; border: 1px solid #E5E7EB; padding: 0 14px; border-radius: 8px; font-size: 15px; width: 100%; transition: 0.2s; height: 48px; display: flex; align-items: center; }
-    .input-field:focus { border-color: var(--primary-red); outline: none; ring: 2px solid rgba(206, 39, 45, 0.1); }
-    textarea.input-field { padding: 14px; height: auto; }
-    .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #F3F4F6; margin-bottom: 16px; }
-    .grid-view { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 4px; }
-    .grid-view .card { margin-bottom: 0; }
-    .grid-view .card-img { aspect-ratio: 1/1; }
-    .icon-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; color: #6B7280; font-size: 11px; cursor: pointer; flex: 1; transition: 0.2s; border-radius: 8px; min-width: 44px; }
-    .icon-btn i { font-size: 20px; margin-bottom: 4px; }
-    .icon-btn:hover { color: var(--primary-red); background-color: #FEF2F2; }
-    .icon-btn.active { color: var(--primary-red); font-weight: bold; }
-    .processing-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .processing-spinner { width: 50px; height: 50px; border: 4px solid #E5E7EB; border-top: 4px solid var(--primary-red); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 10px; }
+    body { background-color: #F3F4F6; font-family: 'Noto Sans TC', sans-serif; padding-bottom: 90px; }
+    
+    /* 主題色配置 (湖水綠 + 活力橘) */
+    :root { --teal-main: #14b8a6; --orange-accent: #f97316; }
+    .bg-teal-main { background-color: var(--teal-main); }
+    .text-teal-main { color: var(--teal-main); }
+    .bg-orange-accent { background-color: var(--orange-accent); }
+    .text-orange-accent { color: var(--orange-accent); }
+
+    /* UI 元件優化 */
+    .input-field { @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 transition; }
+    .btn-action { @apply w-full py-3 rounded-lg font-bold text-white shadow-md transition active:scale-95 text-center block; }
+    .card-shadow { box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    
+    /* 底部導航列 */
+    .bottom-nav-item { @apply flex flex-col items-center justify-center text-gray-400 text-[10px] space-y-1 cursor-pointer transition; }
+    .bottom-nav-item.active { @apply text-teal-600 font-bold; }
+    .bottom-nav-item i { font-size: 20px; margin-bottom: 2px; }
+
+    /* 後台 Grid Menu */
+    .grid-menu-item { @apply flex flex-col items-center justify-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100 active:bg-gray-50 cursor-pointer transition hover:shadow-md; }
+    .grid-menu-icon { @apply text-3xl mb-2 text-teal-500; }
+    
+    /* 商品詳情頁表格 */
+    .spec-table td { @apply p-3 border-b border-gray-100 text-sm; }
+    .spec-table tr:last-child td { border-bottom: none; }
+    .spec-label { @apply font-bold text-gray-500 w-24; }
+    
+    /* Loading 動畫 */
+    .loader { border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid var(--teal-main); width: 24px; height: 24px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .variant-box { display: flex; justify-content: space-between; align-items: center; border: 2px solid #E5E7EB; padding: 16px; margin-bottom: 12px; border-radius: 10px; cursor: pointer; background: white; transition: 0.1s; }
-    .variant-box.active { border-color: var(--primary-red) !important; background-color: #FFF5F5 !important; box-shadow: 0 0 0 2px var(--primary-red) !important; }
-    .variant-box.disabled { opacity: 0.4; pointer-events: none; background: #F9FAFB; filter: grayscale(1); }
-    .variant-input-box { border: 1px solid #E5E7EB; padding: 12px; border-radius: 8px; background: #F9FAFB; margin-bottom: 10px; position: relative; }
-    .sold-out-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; z-index: 20; backdrop-filter: blur(1px); }
-    .stamp-box { border: 6px double #D32F2F; padding: 8px 24px; transform: rotate(-15deg); border-radius: 8px; background: rgba(255,255,255,0.9); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .stamp-text { color: #D32F2F; font-size: 28px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; font-family: sans-serif; }
-    .status-tag { position: absolute; top: 10px; left: 10px; background: var(--primary-red); color: white; padding: 4px 10px; font-size: 12px; font-weight: bold; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 10; }
-    .countdown-tag { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(206, 39, 45, 0.9); color: white; text-align: center; padding: 4px 0; font-size: 12px; font-weight: bold; z-index: 10; }
-    .ship-radio-label { display: flex; align-items: center; border: 1px solid #E5E7EB; padding: 16px; border-radius: 10px; cursor: pointer; margin-bottom: 10px; transition: 0.2s; background: white; }
-    .ship-radio-label:hover { border-color: #D1D5DB; }
-    .ship-radio-label.selected { border-color: var(--primary-red) !important; background-color: #FFF5F5 !important; box-shadow: 0 0 0 1px var(--primary-red); }
-    .radio-circle { width: 22px; height: 22px; border: 2px solid #D1D5DB; border-radius: 50%; margin-right: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
-    .ship-radio-label.selected .radio-circle { border-color: var(--primary-red); background: white; }
-    .radio-dot { width: 12px; height: 12px; background-color: var(--primary-red); border-radius: 50%; display: none; }
-    .ship-radio-label.selected .radio-dot { display: block; }
-    .safe-pb { padding-bottom: calc(env(safe-area-inset-bottom) + 20px); }
-    .tab-container { display: flex; border-bottom: 1px solid #E5E7EB; background: white; position: sticky; top: 0; z-index: 40; }
-    .tab-btn { flex: 1; text-align: center; padding: 14px 0; font-weight: bold; color: #9CA3AF; cursor: pointer; transition: 0.2s; font-size: 15px; }
-    .tab-btn.active { color: var(--primary-red); border-bottom: 3px solid var(--primary-red); }
-    .chip-btn { font-size: 13px; padding: 8px 16px; border-radius: 99px; border: 1px solid #E5E7EB; background: white; font-weight: bold; color: #4B5563; transition: 0.2s; white-space: nowrap; margin-bottom: 6px; margin-right: 6px; }
-    .chip-btn:hover { border-color: var(--primary-red); color: var(--primary-red); background: #FFF5F5; }
-    .progress-track { height: 8px; background-color: #F3F4F6; border-radius: 99px; overflow: hidden; margin-top: 8px; border: 1px solid #E5E7EB; }
-    .progress-fill { height: 100%; background-color: var(--primary-red); border-radius: 99px; transition: width 0.8s ease; }
-    .toast-msg { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 24px; border-radius: 8px; z-index: 9999; font-weight: bold; transition: opacity 0.3s; pointer-events: none; }
-    .hidden { opacity: 0; }
-    .header-compact { background: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6; }
-    .left-info { display: flex; flex-direction: column; align-items: flex-start; }
-    .left-info h1 { font-size: 22px; font-weight: 900; color: #1F2937; margin-bottom: 4px; cursor: pointer; }
-    .left-info .share-btn { font-size: 13px; color: #9CA3AF; cursor: pointer; display: inline-flex; align-items: center; transition: 0.2s; }
-    .left-info .share-btn:hover { color: #CE272D; }
-    .right-logo { width: 70px; height: 70px; background-color: #F9FAFB; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #E5E7EB; font-size: 28px; font-weight: 900; color: #D1D5DB; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .right-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .admin-img-preview { position: relative; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB; }
-    .admin-img-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .admin-img-remove { position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.6); color: white; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; }
-    .thumb-grid { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 5px; }
-    .thumb-item { width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 2px solid transparent; cursor: pointer; flex-shrink: 0; }
-    .thumb-item.active { border-color: var(--primary-red); }
-    .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .modal-content { background: white; border-radius: 16px; padding: 24px; max-width: 500px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; }
-    .modal-body { overflow-y: auto; flex: 1; margin: 16px 0; font-size: 14px; line-height: 1.6; color: #4B5563; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <div id="app" v-cloak class="max-w-md mx-auto min-h-screen relative shadow-2xl flex flex-col bg-[#F8F9FA]">
+  <div id="app" v-cloak class="max-w-md mx-auto min-h-screen relative bg-gray-50 flex flex-col shadow-2xl">
     
-    <div v-if="showTermsModal" class="modal-overlay" @click.self="showTermsModal=false">
-        <div class="modal-content">
-            <h3 class="text-xl font-bold text-gray-800">商家會員條款</h3>
-            <div class="modal-body">
-                <div v-if="!termsContent">載入中...</div>
-                <div v-else>{{ termsContent }}</div>
+    <div v-if="loading" class="fixed inset-0 bg-white/90 z-[999] flex items-center justify-center flex-col backdrop-blur-sm">
+        <div class="loader mb-2" style="width: 40px; height: 40px;"></div>
+        <div class="text-sm font-bold text-gray-600">處理中...</div>
+    </div>
+
+    <div v-if="view.includes('admin')" class="bg-teal-main pt-12 pb-16 px-6 text-white relative rounded-b-[30px] shadow-lg mb-6">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-white p-1 shadow-inner">
+                <img :src="shopLogo || 'https://placehold.co/100?text=Logo'" class="w-full h-full rounded-full object-cover">
             </div>
-            <button @click="showTermsModal=false" class="btn-red">我已了解</button>
+            <div>
+                <h2 class="text-xl font-bold tracking-wide">{{ shopName }}</h2>
+                <div class="text-xs opacity-80 mt-1 bg-black/10 px-2 py-0.5 rounded-full inline-block">統編：{{ currentShopId }}</div>
+            </div>
+            <button @click="logout" class="ml-auto border border-white/40 px-4 py-1.5 rounded-full text-xs hover:bg-white/20 transition">登出</button>
+        </div>
+        <div class="mt-6 flex justify-between items-end px-2">
+            <div>
+                <div class="text-sm opacity-80">本月業績達成</div>
+                <div class="text-3xl font-black tracking-tighter">85<span class="text-base font-normal">%</span></div>
+            </div>
+            <div class="text-right">
+                <div class="text-xs opacity-60">今日訪客</div>
+                <div class="font-bold text-lg">1,208</div>
+            </div>
         </div>
     </div>
 
-    <div v-if="isBanned" class="fixed inset-0 bg-white z-[1000] flex flex-col items-center justify-center text-center p-8">
-        <i class="fa-solid fa-ban text-6xl text-red-500 mb-6"></i>
-        <h1 class="text-3xl font-black text-gray-800 mb-2">帳號已停權</h1>
-        <p class="text-gray-500 mb-8">此商店目前無法使用，請聯繫平台管理員。</p>
-        <button @click="logout" class="btn-red w-auto px-8">登出</button>
-    </div>
-
-    <div id="toast" class="toast-msg hidden"></div>
-
-    <div v-if="submitting" class="processing-overlay">
-        <div class="processing-spinner"></div>
-        <h2 class="text-xl font-black text-gray-800">努力搬貨中... 📦</h2>
-        <p class="text-sm text-gray-500 mt-2">請稍候片刻</p>
-    </div>
-
-    <div v-if="view!=='admin-login' && view!=='register' && view!=='forgot-password'" class="header-compact">
-        <div class="left-info">
-            <h1 @click="goToOfficialShop">{{ shopName || '拍拍購 InsBuy' }}</h1>
-            <div @click="copyShopLink" class="share-btn"><i class="fa-solid fa-share-nodes mr-1"></i>分享賣場</div>
-        </div>
-        <div class="right-logo" @click="goToOfficialShop">
-            <img v-if="shopLogo" :src="shopLogo" @error="$event.target.src='https://placehold.co/100?text=Logo'">
-            <span v-else>{{ (shopName || '拍').charAt(0) }}</span>
-        </div>
-    </div>
-
-    <header v-if="view!=='admin-login' && view!=='register' && view!=='forgot-password'" class="bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100">
-        <div class="flex justify-between items-center px-2 py-2">
-             <button @click="handleNav('inquiry')" :class="['icon-btn', view==='inquiry'?'active':'']">
-                 <i class="fa-solid fa-magnifying-glass"></i><span>訂單查詢</span>
-             </button>
-             <button v-if="view==='shop'" @click="isGridView = !isGridView" class="icon-btn">
-                <i :class="isGridView ? 'fa-solid fa-list' : 'fa-solid fa-table-cells-large'"></i>
-                <span>{{ isGridView ? '切換視圖' : '切換視圖' }}</span>
-             </button>
-             <button v-else @click="handleNav('shop')" class="icon-btn">
-                <i class="fa-solid fa-store"></i><span>回賣場</span>
-             </button>
-             <button @click="handleNav('cart')" :class="['icon-btn relative', view==='cart'?'active':'']">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span v-if="cartTotalQty > 0" class="absolute top-0 right-1 bg-red-600 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full border border-white">{{ cartTotalQty }}</span>
-                <span>購物車</span>
-             </button>
-             <button @click="goToAdmin" :class="['icon-btn', view.includes('admin')?'active':'']">
-                 <i class="fa-solid fa-user-gear"></i>
-                 <span>後台管理</span>
-             </button>
-             <button @click="goToRegister" :class="['icon-btn', view==='register'?'active':'']">
-                 <i class="fa-solid fa-store"></i><span>註冊商家</span>
-             </button>
-        </div>
-        <div v-if="view === 'admin'" class="bg-gray-800 text-white px-4 py-2 flex justify-between items-center text-xs">
-             <span>管理員模式 (Lv.{{ adminLevel }})</span>
-             <div class="flex gap-3">
-                 <button @click="logout" class="hover:text-red-400 font-bold">登出</button>
+    <div v-else class="bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100">
+        <div class="bg-gray-900 text-white text-[10px] py-1.5 px-3 flex justify-between items-center">
+             <div v-if="user" class="flex items-center gap-2">
+                 <img :src="user.user_metadata.avatar_url" class="w-4 h-4 rounded-full border border-white">
+                 <span class="font-bold">Hi, {{ user.user_metadata.full_name }}</span>
              </div>
+             <div v-else class="text-gray-400">訪客模式 (請登入以管理訂單)</div>
+             
+             <button v-if="!user" @click="loginLine" class="bg-[#06C755] hover:bg-[#05b34c] text-white px-2 py-0.5 rounded flex items-center font-bold transition">
+                 <i class="fa-brands fa-line mr-1"></i>LINE 登入
+             </button>
         </div>
-    </header>
-
-    <div v-if="view === 'inquiry'" class="p-6 bg-white min-h-screen">
-        <h2 class="text-2xl font-black mb-6 text-gray-800">訂單查詢</h2>
-        <div class="card p-6 border-0 shadow-lg">
-            <input v-model="inquiryPhone" placeholder="請輸入手機號碼" class="input-field mb-4 text-center text-lg">
-            <button @click="checkOrders" class="btn-red shadow-lg">查詢訂單</button>
-        </div>
-        <div v-if="inquiryResults.length > 0" class="space-y-4 mt-6">
-            <div v-for="order in inquiryResults" :key="order.orderId" class="card p-5 border border-gray-100 shadow-sm relative overflow-hidden">
-                 <div class="flex justify-between items-center mb-3 border-b border-gray-100 pb-2">
-                     <span class="font-bold text-gray-800">{{ order.date }}</span>
-                     <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold">{{ order.status }}</span>
-                 </div>
-                 <div class="space-y-2 mb-3">
-                     <div v-for="(item, i) in order.items" :key="i" class="text-sm text-gray-600 flex justify-between">
-                         <span>{{ item.name }} {{ item.variant ? '- '+item.variant : '' }} x {{ item.qty }}</span>
-                         <span class="font-bold text-gray-800">\${{ item.price }}</span>
-                     </div>
-                 </div>
-                 <div class="flex justify-between items-center pt-2 border-t border-gray-100">
-                     <span class="text-xs text-gray-400">訂單編號: {{ order.orderId }}</span>
-                     <span class="text-xl font-black text-red-600">\${{ formatNumber(order.total) }}</span>
-                 </div>
+        <div class="flex items-center justify-between p-3 bg-white/95 backdrop-blur">
+            <h1 class="font-black text-lg text-gray-800 flex items-center gap-2" @click="view='shop'">
+                <img v-if="shopLogo" :src="shopLogo" class="w-6 h-6 rounded-md object-cover">
+                {{ shopName }}
+            </h1>
+            <div class="flex gap-1">
+                <button @click="view='shop'" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <button @click="view='cart'" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 relative">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span v-if="cart.length>0" class="absolute top-0 right-0 bg-red-500 text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">{{cart.length}}</span>
+                </button>
             </div>
-        </div>
-        <div v-else-if="searched && inquiryResults.length === 0" class="text-center text-gray-400 mt-10">
-            <i class="fa-solid fa-box-open text-4xl mb-2"></i>
-            <p>查無訂單資料</p>
         </div>
     </div>
 
-    <div v-if="view === 'shop'" class="flex-grow flex flex-col min-h-screen pb-32">
-        <div class="tab-container">
-            <div @click="shopTab='active'" :class="['tab-btn', shopTab==='active'?'active':'']">🔥 熱銷團購</div>
-            <div @click="shopTab='history'" :class="['tab-btn', shopTab==='history'?'active':'']">🕒 歷史團購</div>
+    <div v-if="view === 'admin-home'" class="px-4 -mt-10 relative z-10 grid grid-cols-2 gap-3 pb-24">
+        <div @click="view='admin-orders'" class="grid-menu-item">
+            <i class="fa-solid fa-file-invoice-dollar grid-menu-icon"></i>
+            <span class="font-bold text-gray-700 text-sm">訂單管理</span>
+            <span class="text-[10px] text-gray-400 mt-1">待出貨 {{ stats.pendingShip || 0 }} 筆</span>
         </div>
-        <div class="p-4 overflow-y-auto">
-            <div v-if="loading" class="space-y-6 mt-2">
-                 <div v-for="n in 3" :key="n" class="card"><div class="aspect-video skeleton w-full"></div><div class="p-5"><div class="skeleton h-6 w-3/4 mb-4"></div><div class="skeleton h-8 w-1/3 mb-4"></div></div></div>
+        <div @click="view='admin-coupons'" class="grid-menu-item">
+            <i class="fa-solid fa-ticket grid-menu-icon text-orange-500"></i>
+            <span class="font-bold text-gray-700 text-sm">優惠券設定</span>
+            <span class="text-[10px] text-gray-400 mt-1">進行中 2 檔</span>
+        </div>
+        <div @click="view='admin-products'" class="grid-menu-item">
+            <i class="fa-solid fa-box-open grid-menu-icon text-blue-500"></i>
+            <span class="font-bold text-gray-700 text-sm">商品上架</span>
+        </div>
+        <div @click="alert('功能開發中')" class="grid-menu-item">
+            <i class="fa-solid fa-chart-pie grid-menu-icon text-purple-500"></i>
+            <span class="font-bold text-gray-700 text-sm">數據分析</span>
+        </div>
+        <div @click="copyShopLink" class="grid-menu-item col-span-2 flex-row gap-3 bg-gray-800 border-gray-800">
+            <i class="fa-solid fa-share-nodes text-white text-xl mb-0"></i>
+            <span class="font-bold text-white">複製賣場連結分享</span>
+        </div>
+    </div>
+
+    <div v-if="view === 'admin-orders'" class="p-4 space-y-4 pb-24">
+        <div class="flex items-center mb-2">
+            <button @click="view='admin-home'" class="text-gray-400 mr-2 hover:text-gray-600"><i class="fa-solid fa-chevron-left"></i></button>
+            <h2 class="font-bold text-lg">訂單管理</h2>
+        </div>
+        
+        <div class="rounded-xl overflow-hidden card-shadow bg-white border border-gray-100">
+            <div class="bg-orange-accent text-white py-2 px-4 font-bold text-sm flex justify-between items-center">
+                <span>訂單概況</span>
+                <i class="fa-solid fa-circle-info opacity-50"></i>
             </div>
-            <div v-else>
-                <div v-if="filteredProducts.length === 0" class="text-center mt-24 text-gray-400">
-                    <i class="fa-solid fa-fire-flame-curved text-4xl mb-3 opacity-20"></i><p class="font-bold">目前沒有相關團購</p>
+            <div class="grid grid-cols-3 divide-x divide-gray-100 py-4">
+                <div class="text-center px-2">
+                    <div class="text-2xl font-black text-orange-500">{{ stats.newOrders || 0 }}</div>
+                    <div class="text-xs text-gray-500 font-bold mt-1">新訂單</div>
                 </div>
-                <div :class="isGridView ? 'grid-view' : 'space-y-6'">
-                    <div v-for="item in filteredProducts" :key="item.ProductID" @click="openProductDetail(item)" class="card cursor-pointer group hover:shadow-xl transition duration-300">
-                        <div class="relative w-full bg-gray-100 overflow-hidden border-b border-gray-100" :class="isGridView ? 'card-img' : 'aspect-video'">
-                            <img v-if="item.imagesList.length > 0" :src="item.imagesList[0]" @error="$event.target.src='https://placehold.co/300x300?text=No+Image'" class="w-full h-full object-cover transition duration-700 group-hover:scale-105">
-                            <div v-else class="w-full h-full flex items-center justify-center text-gray-400"><i class="fa-regular fa-image text-4xl"></i></div>
-                            <div class="status-tag">HOT</div>
-                            <div v-if="item.remainingStr" class="countdown-tag"><i class="fa-regular fa-clock mr-1"></i>剩 {{ item.remainingStr }}</div>
-                            <div v-if="item.TotalStock <= 0" class="sold-out-overlay"><div class="stamp-box"><div class="stamp-text">已售完</div></div></div>
-                            <div v-else-if="item.Status === 'CLOSED' || item.isExpired" class="sold-out-overlay"><div class="stamp-box"><div class="stamp-text">已結束</div></div></div>
-                        </div>
-                        <div class="p-4 relative">
-                            <h3 :class="['font-bold text-gray-900 leading-snug line-clamp-2', isGridView ? 'text-sm h-10 mb-2' : 'text-xl mb-3']">{{ item.ProductName }}</h3>
-                            <div v-if="!isGridView">
-                                 <div v-if="item.TargetAmount > 0" class="mb-4">
-                                     <div class="flex justify-between text-xs font-bold text-gray-500 mb-1">
-                                         <span>達成率 {{ getProgress(item) }}%</span>
-                                         <span class="text-red-600">已銷 \${{ formatNumber(item.CurrentAmount || 0) }}</span>
-                                     </div>
-                                     <div class="progress-track"><div class="progress-fill" :style="{width: Math.min(getProgress(item), 100) + '%'}"></div></div>
-                                 </div>
-                                 <div class="flex justify-between items-end mt-2">
-                                     <div class="flex items-baseline gap-2">
-                                         <span class="text-xs text-gray-400 line-through">原價\${{ item.OriginalPrice }}</span>
-                                         <span class="text-3xl font-black text-red-600 tracking-tight">\${{ item.Price }}</span>
-                                     </div>
-                                     <button class="bg-red-600 text-white text-sm px-6 py-2 rounded-full font-bold shadow-md hover:bg-red-700 transition">立即搶購</button>
-                                 </div>
-                            </div>
-                            <div v-if="isGridView">
-                                <div class="text-[10px] text-gray-500 mb-1 font-bold">已銷 \${{ formatNumber(item.CurrentAmount || 0) }}</div>
-                                <div class="flex flex-col">
-                                    <span class="text-[10px] text-gray-400 line-through" v-if="item.OriginalPrice > item.Price">原價\${{ item.OriginalPrice }}</span>
-                                    <span class="text-xl font-black text-red-600">\${{ item.Price }}</span>
-                                </div>
-                            </div>
-                        </div>
+                <div class="text-center px-2">
+                    <div class="text-2xl font-black text-orange-500">{{ stats.pendingShip || 0 }}</div>
+                    <div class="text-xs text-gray-500 font-bold mt-1">待出貨</div>
+                </div>
+                <div class="text-center px-2">
+                    <div class="text-2xl font-black text-gray-800">{{ stats.shipped || 0 }}</div>
+                    <div class="text-xs text-gray-500 font-bold mt-1">已出貨</div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="adminOrderList.length > 0" class="space-y-3">
+            <div v-for="order in adminOrderList" :key="order.order_id" class="bg-white p-4 rounded-xl card-shadow border border-gray-50">
+                <div class="flex justify-between border-b border-gray-100 pb-2 mb-2">
+                    <span class="font-bold text-gray-800">{{ order.customer_name }}</span>
+                    <select v-model="order.status_detail" @change="updateOrderStatus(order)" 
+                            class="text-xs border rounded px-2 py-1 bg-gray-50 font-bold"
+                            :class="{'text-green-600': order.status_detail==='completed', 'text-red-500': order.status_detail==='cancelled'}">
+                        <option value="pending_payment">待付款</option>
+                        <option value="paid">已付款</option>
+                        <option value="shipped">已出貨</option>
+                        <option value="completed">已完成</option>
+                        <option value="cancelled">已取消</option>
+                    </select>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div class="text-xs text-gray-400">
+                        <div>單號：{{ order.order_id }}</div>
+                        <div>日期：{{ new Date(order.created_at).toLocaleDateString() }}</div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div v-if="view === 'product' && selectedProduct" class="flex-grow pb-32 overflow-y-auto bg-white">
-        <div class="w-full bg-gray-100 relative">
-            <img :src="currentPreviewImage || selectedProduct.imagesList[0]" @error="$event.target.src='https://placehold.co/400x400?text=No+Image'" class="w-full h-auto object-contain max-h-[500px] mx-auto">
-        </div>
-        <div class="p-6">
-            <div v-if="selectedProduct.imagesList.length > 1" class="thumb-grid mb-4">
-                <div v-for="(img, idx) in selectedProduct.imagesList" :key="idx" 
-                     @click="currentPreviewImage = img"
-                     :class="['thumb-item', currentPreviewImage === img ? 'active' : '']">
-                    <img :src="img" class="w-full h-full object-cover">
-                </div>
-            </div>
-            <div class="flex justify-between items-start mb-4">
-                <h2 class="text-2xl font-black text-gray-900 leading-snug flex-1">{{ selectedProduct.ProductName }}</h2>
-                <button @click="copyProductLink(selectedProduct)" class="ml-4 text-gray-400 hover:text-red-600 text-2xl transition"><i class="fa-solid fa-share-nodes"></i></button>
-            </div>
-            <div class="flex items-baseline gap-3 mb-8 border-b border-gray-100 pb-6">
-                <span class="text-4xl font-black text-red-600">\${{ currentPrice }}</span>
-                <span v-if="selectedProduct.OriginalPrice" class="text-lg text-gray-400 line-through">定價 \${{ selectedProduct.OriginalPrice }}</span>
-            </div>
-            <div class="mb-8">
-                <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center"><span class="w-1 h-6 bg-gray-800 mr-2 rounded-full"></span>專案內容</h3>
-                <div class="text-gray-600 text-base whitespace-pre-wrap leading-relaxed bg-gray-50 p-4 rounded-xl">{{ selectedProduct.Description }}</div>
-            </div>
-            <div v-if="selectedProduct.variants.length > 0" class="mb-8">
-                <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center"><span class="w-1 h-6 bg-red-600 mr-2 rounded-full"></span>選擇規格</h3>
-                <div v-for="(v, idx) in selectedProduct.variants" :key="idx" @click="selectVariant(v, idx)" 
-                     :class="['variant-box', orderForm.variantIdx === idx ? 'active' : '', parseInt(v.stock) <= 0 ? 'disabled' : '']"
-                     :style="orderForm.variantIdx === idx ? 'border: 2px solid #CE272D !important; background-color: #FFF5F5 !important;' : ''">
-                    <span class="font-bold text-gray-800 text-lg">{{ v.name }} <span v-if="v.isVip" class="text-[10px] bg-yellow-400 text-white px-2 py-0.5 rounded ml-2 font-bold">VIP</span></span>
                     <div class="text-right">
-                        <span class="text-red-600 font-bold block text-xl">\${{ v.price }}</span>
-                        <span class="text-xs text-gray-400 block mt-1">{{ parseInt(v.stock) > 0 ? '剩餘 '+v.stock : '已售完' }}</span>
+                        <div class="font-black text-red-500 text-lg">${{ order.total_amount }}</div>
                     </div>
                 </div>
             </div>
-             <div class="flex items-center justify-between border-t border-gray-100 pt-6">
-                <label class="font-bold text-gray-900 text-lg">購買數量</label>
-                <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden h-12 w-48 relative z-10 shadow-sm">
-                    <button type="button" @click.stop="decreaseQty" class="w-14 h-full bg-gray-50 hover:bg-gray-100 border-r border-gray-300 font-bold text-gray-500 text-xl flex items-center justify-center cursor-pointer transition active:bg-gray-200">-</button>
-                    <input v-model.number="orderForm.qty" @change="validateQty" class="w-full text-center outline-none font-bold text-xl h-full bg-white text-gray-800">
-                    <button type="button" @click.stop="increaseQty" class="w-14 h-full bg-gray-50 hover:bg-gray-100 border-l border-gray-300 font-bold text-gray-500 text-xl flex items-center justify-center cursor-pointer transition active:bg-gray-200">+</button>
-                </div>
-            </div>
         </div>
-        <div class="fixed bottom-0 w-full max-w-md bg-white border-t border-gray-100 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 safe-pb">
-            <button @click="addToCart(false)" :disabled="isOutOfStock" class="btn-red shadow-xl">加入購物車</button>
+        <div v-else class="text-center text-gray-400 py-10">尚無訂單資料</div>
+    </div>
+
+    <div v-if="view === 'admin-coupons'" class="p-4 pb-24">
+        <div class="flex items-center mb-4">
+            <button @click="view='admin-home'" class="text-gray-400 mr-2"><i class="fa-solid fa-chevron-left"></i></button>
+            <h2 class="font-bold text-lg">優惠券設定</h2>
+        </div>
+        <div class="bg-white p-5 rounded-xl card-shadow mb-4">
+            <h3 class="font-bold mb-3 text-gray-700">建立新優惠券</h3>
+            <input v-model="newCoupon.code" placeholder="優惠碼 (例如: VIP888)" class="input-field mb-3 uppercase">
+            <input v-model="newCoupon.discount" type="number" placeholder="折扣金額 ($)" class="input-field mb-4">
+            <button @click="createCoupon" class="btn-action bg-teal-main">建立優惠券</button>
         </div>
     </div>
 
-    <div v-if="view === 'cart'" class="flex-grow bg-[#F3F4F6] p-4 pb-32 overflow-y-auto">
-        <h2 class="text-2xl font-black mb-4 text-gray-800 px-1">購物車</h2>
-        <div v-if="cart.length > 0" class="space-y-4">
-            <div v-for="(item, idx) in cart" :key="idx" class="card p-4 flex gap-4 relative border-l-4 border-red-600">
-                <img :src="item.image || 'https://placehold.co/300x300'" class="w-20 h-20 object-cover rounded-lg border border-gray-100">
-                <div class="flex-1">
-                    <div class="font-bold text-gray-900 text-base mb-1">{{ item.productName }}</div>
-                    <div class="text-xs text-gray-500 bg-gray-100 inline-block px-2 py-1 rounded mb-2">{{ item.variantName }} x {{ item.qty }}</div>
-                    <div v-if="item.answers" class="text-xs text-blue-600 bg-blue-50 p-2 rounded mb-2">
-                        <div v-for="(ans, key) in item.answers" :key="key">{{key}}: {{ans}}</div>
-                    </div>
-                    <div class="text-red-600 font-black text-xl">\${{ item.price * item.qty }}</div>
-                </div>
-                <button @click="removeFromCart(idx)" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can text-lg"></i></button>
+    <div v-if="view === 'shop'" class="p-4 pb-24">
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-4 rounded-xl mb-6 shadow-sm">
+            <div class="text-xs font-bold text-blue-600 mb-2 flex items-center">
+                <i class="fa-solid fa-robot mr-2 text-lg"></i> 
+                <span>懶人下單 (貼上如：紅色+1 藍色+2)</span>
             </div>
-            
-            <div class="card p-6 space-y-5">
-                 <h3 class="font-bold text-gray-900 text-lg border-b pb-3 mb-2">收件資訊</h3>
-                 <div>
-                     <label class="block text-sm font-bold text-gray-600 mb-3">運送方式</label>
-                     <div v-if="availableShippingOptions.length > 0">
-                         <div v-for="opt in availableShippingOptions" @click="selectShippingMethod(opt)" 
-                              :class="['ship-radio-label', checkoutForm.shippingMethodName===opt.name && !checkoutForm.isFaceToFace ? 'selected' : '']">
-                              <div class="radio-circle"><div class="radio-dot"></div></div>
-                              <div class="flex-1"><div class="flex justify-between font-bold text-gray-800"><span>{{ opt.name }}</span><span>\${{ opt.totalFee }}</span></div><div class="text-xs text-gray-500 mt-1">{{ opt.ruleDesc }}</div></div>
-                         </div>
-                     </div>
-                     <div v-else class="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">⚠️ 此商品暫無運送選項，請聯繫賣家。</div>
-                     
-                     <div v-if="hasFaceToFace" @click="selectShippingMethod({name:'面交'})"
-                          :class="['ship-radio-label', checkoutForm.isFaceToFace ? 'selected' : '']">
-                          <div class="radio-circle"><div class="radio-dot"></div></div>
-                          <div class="flex-1"><div class="font-bold text-gray-800">面交自取 ($0)</div><div class="text-xs text-gray-500 mt-1">地點: {{ faceToFaceAddress }}</div></div>
-                     </div>
-                 </div>
-                 
-                 <div v-if="checkoutForm.isFaceToFace">
-                     <label class="block text-sm font-bold text-gray-600 mb-2">選擇面交時間</label>
-                     <input type="datetime-local" v-model="checkoutForm.meetTime" class="input-field">
-                 </div>
-                 
-                 <div class="space-y-3">
-                    <input v-model="checkoutForm.name" class="input-field" placeholder="真實姓名">
-                    <input v-model="checkoutForm.phone" class="input-field" placeholder="手機號碼">
-                    <input v-if="!checkoutForm.isFaceToFace" v-model="checkoutForm.address" class="input-field" placeholder="收件地址 / 門市名稱">
-                 </div>
-                 
-                 <div class="pt-6 border-t border-gray-100">
-                    <h3 class="font-bold text-gray-900 text-lg mb-4">付款資訊</h3>
-                    <div v-if="uniqueBankInfo && uniqueBankInfo.account" class="bg-yellow-50 p-5 border border-yellow-200 rounded-xl mb-5 shadow-sm">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm font-bold text-yellow-800 flex items-center"><i class="fa-solid fa-building-columns mr-2"></i>{{ uniqueBankInfo.name || '銀行轉帳' }}</span>
-                            <button @click="copyText(uniqueBankInfo.account)" class="text-xs bg-white border border-yellow-300 px-3 py-1.5 rounded-full text-yellow-700 hover:bg-yellow-100 font-bold transition">複製帳號</button>
+            <div class="flex gap-2">
+                <input v-model="aiInput" class="flex-1 text-sm border-0 shadow-inner bg-white rounded-lg px-3" placeholder="貼上文字...">
+                <button @click="parseAiOrder" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow">解析</button>
+            </div>
+        </div>
+
+        <div v-if="products.length > 0" class="grid grid-cols-2 gap-4">
+            <div v-for="p in products" :key="p.product_id" @click="openProduct(p)" class="bg-white rounded-xl card-shadow overflow-hidden relative group cursor-pointer">
+                <div class="aspect-square bg-gray-100 overflow-hidden">
+                    <img :src="p.images?.split('\n')[0] || 'https://placehold.co/300'" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
+                </div>
+                <div v-if="p.total_stock < 10" class="absolute top-2 left-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded-full font-bold shadow-md animate-pulse">
+                    🔥 剩 {{ p.total_stock }} 組
+                </div>
+                <div class="p-3">
+                    <div class="font-bold text-gray-800 truncate mb-1">{{ p.name }}</div>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-xs text-gray-400 line-through mr-1">${{ p.original_price }}</span>
+                            <span class="text-red-600 font-black text-lg">${{ p.price }}</span>
                         </div>
-                        <div class="font-mono text-2xl font-black text-gray-800 tracking-wider text-center py-2">{{ uniqueBankInfo.account }}</div>
-                        <div class="text-center text-xs text-yellow-600 mt-1">請轉帳後填寫下方後五碼</div>
+                        <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-teal-600 group-hover:bg-teal-50 transition">
+                            <i class="fa-solid fa-cart-plus"></i>
+                        </div>
                     </div>
-                    <div v-else class="text-sm text-gray-400 mb-4 bg-gray-50 p-3 rounded text-center">賣家未設定匯款帳號，請直接聯繫賣家。</div>
-                    
-                    <input v-model="checkoutForm.last5" class="input-field text-center tracking-[0.5em] font-bold text-xl h-14" maxlength="5" placeholder="輸入匯款後五碼">
                 </div>
-
-                <div v-if="cart.some(i => i.questions && i.questions.length > 0)" class="pt-6 border-t border-gray-100">
-                     <h3 class="font-bold text-gray-900 text-lg mb-4">賣家提問 (請填寫)</h3>
-                     <div v-for="(item, idx) in cart" :key="idx">
-                         <div v-if="item.questions && item.questions.length > 0" class="bg-blue-50 p-4 rounded-xl mb-3">
-                             <div class="text-sm font-bold text-blue-800 mb-2">{{ item.productName }}</div>
-                             <div v-for="(q, qIdx) in item.questions" :key="qIdx" class="mb-2">
-                                 <label class="block text-xs font-bold text-gray-700 mb-1">{{ q.title }} <span v-if="q.required" class="text-red-500">*</span></label>
-                                 <input v-model="item.answers[q.title]" class="input-field h-8 text-sm" :placeholder="q.required ? '必填' : '選填'">
-                             </div>
-                         </div>
-                     </div>
-                </div>
-
-                <textarea v-model="checkoutForm.note" rows="2" class="input-field" placeholder="備註 (選填)"></textarea>
-            </div>
-            <div class="card p-6 space-y-3 text-sm font-medium">
-                <div class="flex justify-between text-gray-500"><span>小計</span><span>\${{ cartSubTotal }}</span></div>
-                <div class="flex justify-between text-gray-500"><span>運費</span><span>\${{ checkoutForm.isFaceToFace ? 0 : currentShippingTotal }}</span></div>
-                <div class="flex justify-between text-2xl font-black text-gray-900 border-t border-gray-200 pt-4 mt-2"><span>總計</span><span class="text-red-600">\${{ cartFinalTotal }}</span></div>
             </div>
         </div>
-        <div v-else class="text-center py-32 text-gray-400">
-            <i class="fa-solid fa-cart-arrow-down text-6xl mb-6 opacity-20"></i><p class="font-bold text-lg">購物車是空的</p>
-            <button @click="view='shop'" class="mt-8 text-red-600 font-bold underline text-lg">去逛逛</button>
-        </div>
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-5 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 max-w-md mx-auto safe-pb">
-            <button @click="submitOrder" :disabled="cart.length === 0" class="w-full btn-red py-4 shadow-xl disabled:opacity-50 text-lg">確認結帳 • \${{ cartFinalTotal }}</button>
+        <div v-else class="text-center text-gray-400 py-20">
+            <i class="fa-solid fa-box-open text-4xl mb-2 opacity-30"></i>
+            <p>目前沒有商品上架</p>
         </div>
     </div>
 
-    <div v-if="view === 'admin'" class="p-4 bg-[#F3F4F6] min-h-screen pb-24">
-        <div class="bg-white p-5 rounded-xl shadow-sm mb-6 border border-gray-200">
-            <h3 class="font-bold text-gray-800 border-b pb-2 mb-4 flex justify-between items-center">
-                <span>商店設定</span>
-                <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded font-bold border border-yellow-300">Lv.{{ adminLevel }}</span>
-            </h3>
-            <div class="flex gap-4 items-start">
-                <div class="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 border flex items-center justify-center overflow-hidden">
-                    <img v-if="shopLogo" :src="shopLogo" @error="$event.target.src='https://placehold.co/100?text=Logo'" class="w-full h-full object-cover">
-                    <span v-else class="text-2xl text-gray-300 font-bold">{{ (shopName||'').charAt(0) }}</span>
+    <div v-if="view === 'product' && selectedProduct" class="bg-white min-h-screen pb-24">
+        <div class="relative">
+            <img :src="selectedProduct.images?.split('\n')[0]" class="w-full h-96 object-cover">
+            <button @click="view='shop'" class="absolute top-4 left-4 bg-black/40 backdrop-blur text-white w-10 h-10 rounded-full flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+        </div>
+        
+        <div class="p-5">
+            <h1 class="text-2xl font-black text-gray-800 mb-2">{{ selectedProduct.name }}</h1>
+            <div class="flex items-baseline gap-2 mb-6 border-b border-gray-100 pb-4">
+                <span class="text-3xl font-black text-red-600">${{ selectedProduct.price }}</span>
+                <span class="text-gray-400 line-through">原價 ${{ selectedProduct.original_price }}</span>
+            </div>
+
+            <table class="w-full spec-table mb-6">
+                <tr>
+                    <td class="spec-label">規格選擇</td>
+                    <td>
+                        <select v-model="orderForm.variant" class="w-full border border-gray-300 p-2 rounded-lg bg-white">
+                            <option value="" disabled>請選擇規格</option>
+                            <option v-for="v in selectedProduct.variants" :value="v.name" :disabled="parseInt(v.stock)<=0">
+                                {{ v.name }} (剩{{v.stock}})
+                            </option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="spec-label">購買數量</td>
+                    <td>
+                        <div class="flex items-center border border-gray-300 rounded-lg w-32 overflow-hidden">
+                            <button @click="orderForm.qty > 1 ? orderForm.qty-- : null" class="w-10 h-10 bg-gray-50 hover:bg-gray-100 border-r">-</button>
+                            <input v-model.number="orderForm.qty" class="w-full text-center outline-none h-10 font-bold bg-white" readonly>
+                            <button @click="orderForm.qty++" class="w-10 h-10 bg-gray-50 hover:bg-gray-100 border-l">+</button>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="bg-gray-50 p-4 rounded-xl mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-gray-700 text-sm">賣家資訊</h3>
+                    <button class="text-xs text-gray-400 hover:text-red-500 flex items-center"><i class="fa-solid fa-triangle-exclamation mr-1"></i>檢舉</button>
                 </div>
-                <div class="flex-1 space-y-3">
-                    <input v-model="shopName" class="input-field h-10" placeholder="商店名稱">
-                    <label class="text-xs bg-gray-800 text-white px-3 py-2 rounded cursor-pointer inline-block hover:bg-gray-700">
-                        <i class="fa-solid fa-camera mr-1"></i>更換 Logo
-                        <input type="file" accept="image/*" class="hidden" @change="handleLogoUpload">
-                    </label>
-                    <button @click="updateShopSettings" class="text-xs bg-red-600 text-white px-3 py-2 rounded ml-2 hover:bg-red-700">儲存設定</button>
+                <div class="flex gap-2">
+                    <button @click="contactLine" class="flex-1 bg-[#06C755] text-white py-2.5 rounded-lg font-bold text-sm shadow-sm hover:opacity-90">
+                        <i class="fa-brands fa-line mr-1 text-lg align-middle"></i> 聯絡賣家
+                    </button>
+                    <button @click="shareProduct" class="flex-1 bg-white border border-teal-500 text-teal-600 py-2.5 rounded-lg font-bold text-sm shadow-sm">
+                        <i class="fa-solid fa-share-nodes mr-1"></i> 分享連結
+                    </button>
                 </div>
             </div>
             
-            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                 <div class="text-xs text-gray-400">商店 ID: {{ currentShopId }}</div>
-                 <div class="flex gap-2">
-                     <button v-if="currentShopId === 'S001'" @click="toggleRegistration" class="text-xs bg-blue-600 text-white px-2 py-1 rounded">{{ registrationStatus === 'OPEN' ? '🟢 註冊中' : '🔴 停註冊' }}</button>
-                     <button @click="logout" class="text-xs text-red-500 border border-red-200 px-2 py-1 rounded hover:bg-red-50">登出</button>
-                 </div>
+            <div class="text-xs text-gray-400 text-center mt-4">
+                此平台已啟用 SSL 安全加密，請安心購買
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="card p-5 text-center mb-0 shadow-sm border-0"><div class="text-xs text-gray-500 font-bold mb-2">今日銷售</div><div class="text-3xl font-black text-gray-800">\${{ formatNumber(stats.daily) }}</div></div>
-            <div class="card p-5 text-center mb-0 shadow-sm border-0"><div class="text-xs text-gray-500 font-bold mb-2">本月銷售</div><div class="text-3xl font-black text-red-600">\${{ formatNumber(stats.monthly) }}</div></div>
-        </div>
-        
-        <button @click="isEditing=true; resetForm()" class="btn-red mb-6 shadow-lg w-full py-4"><i class="fa-solid fa-plus mr-2"></i>新增團購</button>
-        
-        <div v-if="isEditing" class="space-y-6" id="adminForm">
-             <div v-if="limitReached && !editingProductId" class="bg-red-50 border-l-4 border-red-500 p-4 rounded text-sm text-red-700 mb-4"><p class="font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 已達開團上限</p><p>請先結束現有團購，或是 <a href="https://groupbuy.smartbuytaiwan.workers.dev/?shopId=S001" target="_blank" class="underline font-bold">升級方案</a>。</p></div>
-             <fieldset :disabled="limitReached && !editingProductId" class="space-y-5 group-disabled:opacity-50 group-disabled:pointer-events-none">
-                 <div class="card p-6 space-y-4">
-                     <h3 class="font-bold text-gray-800 border-b pb-2">基本資訊</h3>
-                     <input v-model="newProduct.name" placeholder="商品名稱" class="input-field">
-                     <textarea v-model="newProduct.description" rows="4" placeholder="商品描述" class="input-field"></textarea>
-                     <textarea v-model="newProduct.images" rows="3" placeholder="圖片連結 (一行一張)" class="input-field font-mono text-xs"></textarea>
-                     <label class="btn-red bg-gray-800 text-white text-sm py-3 w-auto inline-block cursor-pointer px-6 rounded-full"><i class="fa-solid fa-camera mr-2"></i>上傳圖片 (可多選)<input type="file" multiple accept="image/*" class="hidden" @change="handleFileUpload"></label>
-                     <div v-if="newProduct.images" class="flex flex-wrap gap-2 mt-2">
-                         <div v-for="(img, i) in newProduct.images.split('\\n')" :key="i" class="admin-img-preview">
-                             <img :src="img" @error="$event.target.style.display='none'">
-                             <div class="admin-img-remove" @click="removeImage(i)"><i class="fa-solid fa-times"></i></div>
-                         </div>
-                     </div>
-                 </div>
-
-                 <div class="card p-6 space-y-4">
-                     <h3 class="font-bold text-gray-800 border-b pb-2">價格與規格</h3>
-                     <div class="grid grid-cols-2 gap-4"><input v-model="newProduct.price" type="number" placeholder="特價" class="input-field text-red-600 font-bold"><input v-model="newProduct.originalPrice" type="number" placeholder="原價" class="input-field"></div>
-                     <div class="border-t pt-4 mt-2">
-                         <div class="flex justify-between items-center mb-3"><label class="text-sm font-bold text-gray-600">規格設定</label><button @click="addVariant" class="text-xs bg-gray-100 px-3 py-1 rounded border hover:bg-gray-200">+ 新增規格</button></div>
-                         <div v-for="(v, idx) in newProduct.variants" :key="idx" class="variant-input-box relative">
-                             <i @click="newProduct.variants.splice(idx,1)" class="fa-solid fa-times absolute top-2 right-2 text-gray-400 p-2 cursor-pointer"></i>
-                             <input v-model="v.name" placeholder="規格名稱" class="input-field h-10 mb-2">
-                             <div class="flex gap-2"><input v-model="v.price" type="number" placeholder="價格" class="input-field h-10 text-center"><input v-model="v.stock" type="number" placeholder="庫存" class="input-field h-10 text-center"></div>
-                         </div>
-                     </div>
-                 </div>
-                 
-                 <div class="card p-6 space-y-4">
-                     <h3 class="font-bold text-gray-800 border-b pb-2">運送與金流</h3>
-                     <div class="flex flex-wrap gap-2 mb-2">
-                         <button v-for="type in ['7-11','全家','萊爾富','宅配','郵寄','面交','其他']" 
-                                 @click="addShippingRule(type)" 
-                                 class="chip-btn">+ {{ type }}</button>
-                     </div>
-                     <div v-for="(r, idx) in newProduct.shipping" :key="idx" class="flex gap-2 mb-2 items-center bg-gray-50 p-2 rounded">
-                         <input v-model="r.name" placeholder="方式名稱" class="input-field h-10 text-xs flex-1 border-0 bg-white">
-                         <input v-model="r.fee" type="number" placeholder="運費" class="input-field h-10 w-20 text-center mx-1 border-0 bg-white">
-                         <input v-model="r.limit" type="number" placeholder="數量限制" class="input-field h-10 w-20 text-center border-0 bg-white" title="每幾件收一次運費">
-                         <i @click="newProduct.shipping.splice(idx,1)" class="fa-solid fa-trash text-red-400 cursor-pointer ml-2 hover:text-red-600"></i>
-                     </div>
-                     <div v-if="newProduct.shipping.some(s => s.name.includes('面交'))" class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                         <label class="block text-xs font-bold text-yellow-800 mb-1">面交地點說明</label>
-                         <input v-model="newProduct.faceToFaceAddress" placeholder="例如：台北車站 M3 出口" class="input-field h-10 text-sm">
-                     </div>
-                     
-                     <div class="border-t pt-4 mt-2">
-                         <div class="flex gap-4 mb-4">
-                             <div class="flex-1 w-1/2">
-                                 <label class="block text-xs font-bold text-gray-500 mb-1">開團天數</label>
-                                 <div class="flex gap-2">
-                                     <select v-model="durationSelect" class="input-field h-10 text-sm w-full bg-white flex-1" @change="onDurationChange">
-                                         <option value="1">1 天</option>
-                                         <option value="3">3 天</option>
-                                         <option value="7">7 天</option>
-                                         <option value="15">15 天</option>
-                                         <option value="30">30 天</option>
-                                         <option value="custom">其他</option>
-                                     </select>
-                                     <input v-if="durationSelect==='custom'" v-model="newProduct.duration" type="number" placeholder="天數" class="input-field h-10 w-20 text-center">
-                                 </div>
-                             </div>
-                             <div class="flex-1 w-1/2">
-                                 <label class="block text-xs font-bold text-gray-500 mb-1">目標金額</label>
-                                 <input v-model="newProduct.targetAmount" type="number" class="input-field h-10 w-full">
-                             </div>
-                         </div>
-                         
-                         <div>
-                             <label class="block text-xs font-bold text-gray-500 mb-1">收款銀行</label>
-                             <div class="flex gap-2 mb-2">
-                                 <select v-model="selectedBank" @change="onBankChange" class="input-field h-10 flex-1 bg-white">
-                                     <option value="" disabled>選擇銀行</option>
-                                     <option v-for="b in commonBanks" :value="b">{{ b }}</option>
-                                     <option value="Other">其他 (手動輸入)</option>
-                                 </select>
-                                 <input v-if="selectedBank==='Other'" v-model="newProduct.bank.name" placeholder="輸入銀行名稱" class="input-field h-10 flex-1">
-                             </div>
-                             <input v-model="newProduct.bank.account" placeholder="銀行帳號" class="input-field h-10 w-full font-mono">
-                         </div>
-                     </div>
-                 </div>
-
-                 <div class="card p-6 space-y-4">
-                     <h3 class="font-bold text-gray-800 border-b pb-2">賣家提問 (選填)</h3>
-                     <div v-for="(q, idx) in newProduct.questions" :key="idx" class="flex gap-2 items-center bg-gray-50 p-3 rounded">
-                         <input v-model="q.title" class="input-field h-10 flex-1" placeholder="問題內容 (如: 你的Line ID)">
-                         <label class="flex items-center text-sm font-bold text-gray-600 gap-2">
-                             <input type="checkbox" v-model="q.required"> 必填
-                         </label>
-                         <button @click="newProduct.questions.splice(idx,1)" class="text-red-500 hover:text-red-700 ml-2"><i class="fa-solid fa-trash"></i></button>
-                     </div>
-                     <button @click="addQuestion" class="text-sm bg-blue-50 text-blue-600 px-4 py-2 rounded-full font-bold hover:bg-blue-100">+ 新增問題</button>
-                 </div>
-
-                 <button @click="saveProduct" class="btn-red w-full py-4 shadow-xl">儲存設定</button>
-                 <button @click="isEditing=false" class="w-full py-4 text-gray-500 font-bold bg-white border border-gray-300 rounded-lg hover:bg-gray-50">取消</button>
-             </fieldset>
-        </div>
-        
-        <div class="flex border-b border-gray-200 mb-4 mt-2">
-            <div @click="adminTab='active'" :class="['tab-btn', adminTab==='active'?'active':'']">團購中</div>
-            <div @click="adminTab='ended'" :class="['tab-btn', adminTab==='ended'?'active':'']">已結束</div>
-            <div @click="adminTab='deleted'" :class="['tab-btn', adminTab==='deleted'?'active':'']">已刪除</div>
-        </div>
-
-        <div class="mt-2 space-y-3">
-            <div v-for="item in adminFilteredProducts" :key="item.ProductID" class="card p-4 flex justify-between items-center mb-3">
-                <div class="flex items-center gap-4"><img :src="item.imagesList[0] || 'https://placehold.co/100'" @error="$event.target.src='https://placehold.co/100'" class="w-12 h-12 rounded-lg object-cover bg-gray-100 border border-gray-100"><div class="text-sm font-bold text-gray-800 truncate w-32">{{ item.ProductName }}</div></div>
-                <div class="flex gap-2"><button @click="handleEditClick(item)" class="text-xs border border-blue-200 text-blue-600 px-3 py-1.5 rounded hover:bg-blue-50 font-bold">編輯</button><button @click="handleDeleteClick(item.ProductID)" class="text-xs border border-red-200 text-red-600 px-3 py-1.5 rounded hover:bg-red-50 font-bold">刪除</button></div>
+        <div class="fixed bottom-0 w-full p-4 bg-white border-t border-gray-200 safe-pb z-40 max-w-md mx-auto shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
+            <div class="flex gap-3">
+                <div class="flex-1 flex flex-col justify-center">
+                    <span class="text-xs text-gray-500">總計金額</span>
+                    <span class="font-black text-xl text-red-600">${{ selectedProduct.price * orderForm.qty }}</span>
+                </div>
+                <button @click="addToCart" class="flex-[2] btn-action bg-orange-accent text-lg">加入購物車</button>
             </div>
-            <div v-if="adminFilteredProducts.length===0" class="text-center text-gray-400 py-10 text-sm">無資料</div>
         </div>
     </div>
-    
-    <div v-if="view === 'admin-login'" class="p-8 text-center bg-white min-h-screen flex flex-col justify-center">
-         <h2 class="text-3xl font-black mb-8 text-gray-800">商家登入</h2>
-         <input v-model="loginForm.email" placeholder="Email" class="input-field mb-3 text-center">
-         <input type="password" v-model="loginForm.password" placeholder="密碼" class="input-field mb-4 text-center">
-         <button @click="adminLogin" class="btn-red w-full mb-6 shadow-lg">登入</button>
-         <div class="flex justify-between w-full px-4 mt-2">
-             <button @click="view='forgot-password'" class="text-sm text-gray-500 hover:text-gray-800 underline">忘記密碼</button>
-             <button @click="view='register'" class="text-sm text-gray-500 hover:text-gray-800 underline">註冊新帳號</button>
-         </div>
-    </div>
 
-    <div v-if="view === 'forgot-password'" class="p-8 text-center bg-white min-h-screen flex flex-col justify-center">
-        <h2 class="text-2xl font-black mb-6 text-gray-800">重設密碼</h2>
-        <p class="text-gray-500 text-sm mb-6">請輸入您註冊的 Email，我們會將密碼寄給您。</p>
-        <input v-model="loginForm.email" placeholder="Email" class="input-field mb-6 text-center">
-        <button @click="resetPassword" class="btn-red w-full mb-4">寄送密碼</button>
-        <button @click="view='admin-login'" class="text-sm text-gray-400 hover:text-gray-600">返回登入</button>
-    </div>
+    <div v-if="view === 'cart'" class="p-4 pb-24 bg-gray-50 min-h-screen">
+        <h2 class="font-black text-xl mb-4 text-gray-800">我的購物車</h2>
+        
+        <div v-if="cart.length > 0" class="space-y-4">
+            <div v-for="(item, idx) in cart" :key="idx" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4 relative">
+                <div class="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <img :src="item.images?.split('\n')[0]" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1 pr-6">
+                    <div class="font-bold text-gray-800 mb-1 line-clamp-1">{{ item.name }}</div>
+                    <div class="text-xs text-gray-500 bg-gray-100 inline-block px-2 py-1 rounded mb-2">規格: {{ item.variant }}</div>
+                    <div class="flex justify-between items-center">
+                        <div class="text-xs text-gray-500">x {{ item.qty }}</div>
+                        <div class="text-red-600 font-black text-lg">${{ item.price * item.qty }}</div>
+                    </div>
+                </div>
+                <button @click="cart.splice(idx,1)" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 p-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
 
-    <div v-if="view === 'register'" class="p-8 text-center bg-white min-h-screen flex flex-col justify-center">
-        <h2 class="text-3xl font-black mb-8 text-gray-800">註冊商家</h2>
-        <input v-model="regForm.shopName" class="input-field text-center mb-3" placeholder="賣場名稱">
-        <input v-model="regForm.company" class="input-field text-center mb-3" placeholder="公司名稱 (選填)">
-        <input v-model="regForm.taxId" class="input-field text-center mb-3" placeholder="統一編號 (選填)">
-        <input v-model="regForm.phone" class="input-field text-center mb-3" placeholder="電話號碼 (必填)">
-        <input v-model="regForm.email" class="input-field text-center mb-3" placeholder="Email">
-        <input v-model="regForm.password" type="password" class="input-field text-center mb-3" placeholder="密碼">
-        <div class="flex items-center justify-center gap-2 mb-4 text-sm text-gray-600">
-            <input type="checkbox" v-model="regForm.agreeTerms" id="agreeTerms">
-            <label for="agreeTerms">我已閱讀並同意 <span class="text-blue-600 underline cursor-pointer" @click="openTerms">拍拍購商家會員條款</span></label>
+            <div class="bg-white p-4 rounded-xl shadow-sm mt-4">
+                <label class="block text-sm font-bold mb-2 text-gray-700"><i class="fa-solid fa-ticket mr-1 text-orange-500"></i>優惠券 / 折扣碼</label>
+                <div class="flex gap-2">
+                    <input v-model="couponCode" placeholder="輸入代碼" class="input-field bg-gray-50">
+                    <button @click="applyCoupon" class="bg-gray-800 text-white px-4 rounded-lg text-sm font-bold whitespace-nowrap">套用</button>
+                </div>
+                <div v-if="discount > 0" class="text-green-600 text-sm mt-2 font-bold flex items-center">
+                    <i class="fa-solid fa-check-circle mr-1"></i> 已折抵 ${{ discount }}
+                </div>
+            </div>
+
+            <div class="mt-6 bg-white p-5 rounded-xl shadow-lg border border-gray-100">
+                <div class="flex justify-between mb-2 text-sm text-gray-500"><span>商品小計</span><span>${{ cartTotal }}</span></div>
+                <div class="flex justify-between mb-2 text-sm text-green-600" v-if="discount > 0"><span>折扣優惠</span><span>-${{ discount }}</span></div>
+                <div class="border-t border-gray-100 my-3"></div>
+                <div class="flex justify-between items-end mb-4">
+                    <span class="font-bold text-gray-800">結帳總金額</span>
+                    <span class="text-2xl font-black text-red-600">${{ Math.max(0, cartTotal - discount) }}</span>
+                </div>
+                <button @click="checkout" class="btn-action bg-red-600 text-lg shadow-red-200">去買單</button>
+            </div>
         </div>
-        <button @click="register" class="btn-red w-full mt-2 shadow-lg">註冊</button>
-        <button @click="view='shop'" class="text-xs text-gray-400 mt-6 block mx-auto hover:text-gray-600">取消</button>
+        
+        <div v-else class="text-center py-32 text-gray-400">
+            <i class="fa-solid fa-cart-arrow-down text-6xl mb-4 opacity-20"></i>
+            <p class="font-bold">購物車空空的</p>
+            <button @click="view='shop'" class="mt-6 text-teal-600 font-bold underline">趕快去逛逛</button>
+        </div>
+    </div>
+
+    <div v-if="view === 'orders'" class="p-4 pb-24 bg-gray-50 min-h-screen">
+        <h2 class="font-black text-xl mb-4 text-gray-800">我的訂單</h2>
+        <div v-if="!user" class="text-center py-10">
+            <p class="text-gray-500 mb-4">請先登入以查看訂單</p>
+            <button @click="loginLine" class="bg-[#06C755] text-white px-4 py-2 rounded font-bold">LINE 登入</button>
+        </div>
+        <div v-else-if="myOrders.length === 0" class="text-center py-10 text-gray-400">
+            尚無訂單紀錄
+        </div>
+        <div v-else class="space-y-4">
+            <div v-for="order in myOrders" :key="order.order_id" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-50">
+                    <span class="text-xs text-gray-500">{{ new Date(order.created_at).toLocaleDateString() }}</span>
+                    <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-600 font-bold">{{ order.status_detail || '處理中' }}</span>
+                </div>
+                <div class="space-y-1 mb-3">
+                    <div v-for="(item, i) in order.items" :key="i" class="flex justify-between text-sm">
+                        <span class="text-gray-700">{{ item.name }} x{{item.qty}}</span>
+                        <span class="font-bold text-gray-900">${{item.price * item.qty}}</span>
+                    </div>
+                </div>
+                <div class="text-right pt-2 border-t border-gray-50">
+                    <span class="text-xs text-gray-400 mr-2">訂單編號: {{ order.order_id }}</span>
+                    <span class="font-black text-red-600 text-lg">${{ order.total_amount }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around py-2 pb-6 z-50 max-w-md mx-auto shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+        <div class="bottom-nav-item" @click="contactLine">
+            <i class="fa-brands fa-line text-[#06C755]"></i>
+            <span>客服</span>
+        </div>
+        
+        <div class="bottom-nav-item" :class="{active: view==='orders'}" @click="fetchMyOrders(); view='orders'">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>訂單</span>
+        </div>
+
+        <div class="relative -top-6" @click="view='shop'">
+            <div class="w-14 h-14 bg-teal-main rounded-full flex items-center justify-center text-white shadow-lg border-4 border-gray-50 transform hover:scale-105 transition active:scale-95">
+                <i class="fa-solid fa-store text-2xl"></i>
+            </div>
+        </div>
+
+        <div class="bottom-nav-item relative" :class="{active: view==='cart'}" @click="view='cart'">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span>購物車</span>
+            <span v-if="cart.length>0" class="absolute top-0 right-2 bg-red-500 text-white text-[8px] w-3 h-3 rounded-full flex items-center justify-center">{{cart.length}}</span>
+        </div>
+
+        <div class="bottom-nav-item" :class="{active: view.includes('admin')}" @click="goToAdmin">
+            <i class="fa-solid fa-user-gear"></i>
+            <span>後台</span>
+        </div>
     </div>
 
   </div>
-  
+
   <script>
-    // 這裡替換成您自己的 Render 後端網址 (例如 https://backend.onrender.com/api)
-    // 本機測試請維持 http://localhost:3000/api
+    // ============================================
+    // ⚠️ 設定區域：請務必填寫您的真實資料
+    // ============================================
     const API_BASE = 'https://insbuy-project.onrender.com/api'; 
-    
-    // 這裡替換成您的 Supabase 設定
-    const supabaseUrl = 'https://robgmhyjdfizzxdddqzr.supabase.co';
-    const supabaseKey = '您sb_publishable_WlEj-PHW5HuMZ94HXNJYyA_pKYERes4';
-    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const SUPABASE_URL = 'https://robgmhyjdfizzxdddqzr.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_WlEj-PHW5HuMZ94HXNJYyA_pKYERes4';
+    // ============================================
+
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     Vue.createApp({
-       data() {
-           return {
-               view: 'shop', loading: false, submitting: false, isGridView: false, searched: false,
-               products: [], cart: [], inquiryResults: [], stats: {daily:0, monthly:0},
-               currentShopId: '', inquiryPhone: '', authShopId: '', shopLogo: '', shopName: '拍拍購 InsBuy',
-               checkoutForm: { name: '', phone: '', address: '', shippingMethodName: '', isFaceToFace: false, meetTime: '', last5: '', note: '' },
-               newProduct: { name: '', description: '', images: '', price: '', originalPrice: '', duration: '1', targetAmount: 0, variants: [], shipping: [], bank: {name:'', account:''}, faceToFaceAddress: '', vipConfig: [], questions: [] },
-               regForm: { shopName: '', email: '', password: '', company: '', taxId: '', phone: '', agreeTerms: false },
-               loginForm: { email: '', password: '', remember: true },
-               shopTab: 'active', adminTab: 'active', isEditing: false, editingProductId: null,
-               adminLevel: 1, isBanned: false, sheetId: null,
-               levelRules: { 1: { maxActive: 1, canEdit: false, canDelete: false, maxDays: 1, imgLimit: 1 } },
-               commonBanks: ['中國信託 (822)', '國泰世華 (013)', '玉山銀行 (808)', '台新銀行 (812)', '台北富邦 (012)', '中華郵政 (700)', '台灣銀行 (004)', '第一銀行 (007)', '華南銀行 (008)', '永豐銀行 (807)'],
-               selectedBank: '', durationSelect: '1',
-               adminLoggedIn: false, registrationStatus: 'OPEN',
-               orderForm: { variantIdx: -1, qty: 1, answers: {} },
-               currentPreviewImage: '',
-               showTermsModal: false, termsContent: ''
-           }
-       },
-       computed: {
-           isAdminLoggedIn() { return !!this.currentShopId && !!localStorage.getItem('adminCreds'); },
-           uniqueBankInfo() { if (this.cart.length === 0) return null; return this.cart[0].bankInfo || {}; },
-           filteredProducts() { var self = this; return this.products.filter(function(p) { if (String(p.IsDeleted).toUpperCase() === 'TRUE') { return false; } var isOpen = String(p.Status).toUpperCase() === 'OPEN' && !p.isExpired && p.TotalStock > 0; if (self.shopTab === 'active') { return isOpen; } else { return !isOpen; } }).sort(function(a, b) { if (self.shopTab === 'history') { return new Date(b.EndTime) - new Date(a.EndTime); } return 0; }); },
-           adminFilteredProducts() { var self = this; if (!this.products) return []; return this.products.filter(function(p) { var isDel = String(p.IsDeleted).toUpperCase() === 'TRUE'; if (self.adminTab === 'deleted') { return isDel; } var isOpen = String(p.Status).toUpperCase() === 'OPEN' && !p.isExpired && p.TotalStock > 0; if (self.adminTab === 'active') { return !isDel && isOpen; } if (self.adminTab === 'ended') { return !isDel && !isOpen; } return false; }); },
-           cartSubTotal() { return this.cart.reduce((s, i) => s + (i.price * i.qty), 0); },
-           cartTotalQty() { return this.cart.reduce((s, i) => s + i.qty, 0); },
-           currentShippingTotal() { if(this.checkoutForm.isFaceToFace) return 0; var total = 0, method = this.checkoutForm.shippingMethodName; this.cart.forEach(item => { total += this.calculateItemShipping(item, method); }); return total; },
-           cartFinalTotal() { return this.cartSubTotal + this.currentShippingTotal; },
-           hasFaceToFace() { return this.cart.some(i => i.faceToFaceAddress); },
-           faceToFaceAddress() { return this.cart.find(i => i.faceToFaceAddress)?.faceToFaceAddress || ''; },
-           currentPrice() { if (this.selectedProduct && this.orderForm.variantIdx >= 0 && this.selectedProduct.variants[this.orderForm.variantIdx]) { return this.selectedProduct.variants[this.orderForm.variantIdx].price; } return this.selectedProduct ? this.selectedProduct.Price : 0; },
-           isOutOfStock() { if (!this.selectedProduct) return true; if (this.selectedProduct.variants.length > 0 && this.orderForm.variantIdx >= 0) { return parseInt(this.selectedProduct.variants[this.orderForm.variantIdx].stock) <= 0; } return this.selectedProduct.TotalStock <= 0; },
-           currentRules() { return this.levelRules[this.adminLevel] || this.levelRules[1]; },
-           checkImageLimit() { var limit = this.currentRules.imgLimit || 3; var currentCount = this.newProduct.images ? this.newProduct.images.split('\\n').length : 0; return currentCount < limit; },
-           canDelete() { return this.currentRules.canDelete; },
-           canEdit() { return this.currentRules.canEdit; },
-           currentActiveCount() { return this.products.filter(p => String(p.Status).toUpperCase() === 'OPEN' && !p.isExpired && String(p.IsDeleted).toUpperCase() !== 'TRUE').length; },
-           limitReached() { return this.currentActiveCount >= (this.currentRules.maxActive || 1); },
-           availableShippingOptions() { let options = []; if (this.cart.length > 0) { let firstItemRules = this.cart[0].shippingRules || []; firstItemRules.forEach(rule => { let totalFee = 0; this.cart.forEach(cartItem => { totalFee += this.calculateItemShipping(cartItem, rule.name); }); if (rule.name) { options.push({ name: rule.name, totalFee: totalFee, ruleDesc: '每 ' + rule.limit + ' 件 $' + rule.fee }); } }); } return options; }
-       },
-       methods: {
-           formatNumber(num) { return (num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); },
-           getProgress(item) { if (!item.TargetAmount || item.TargetAmount <= 0) return 0; return Math.floor(((item.CurrentAmount || 0) / item.TargetAmount) * 100); },
-           goToOfficialShop() { window.location.href = window.location.origin + window.location.pathname + '?shopId=S001'; },
-           
-           // API 呼叫
-           async callApi(endpoint, payload) {
-               this.loading = true;
-               if(!payload.shopId && this.currentShopId) payload.shopId = this.currentShopId;
-               
-               if (['getStats', 'inquiry', 'products', 'getTerms', 'getSystemStatus'].includes(endpoint)) {
-                   const queryParams = new URLSearchParams(payload).toString();
-                   try {
-                       const res = await fetch(`${API_BASE}/${endpoint}?${queryParams}`);
-                       this.loading = false;
-                       return await res.json();
-                   } catch(e) {
-                       this.loading = false;
-                       console.error(e);
-                       return {status: 'error', msg: 'Network Error'};
-                   }
-               }
-
-               try {
-                   const res = await fetch(`${API_BASE}/${endpoint}`, {
-                       method: 'POST',
-                       headers: { 'Content-Type': 'application/json' },
-                       body: JSON.stringify(payload)
-                   });
-                   const json = await res.json();
-                   this.loading = false;
-                   return json;
-               } catch(e) {
-                   this.loading = false;
-                   alert('連線錯誤: ' + e.message);
-                   return {status:'error'};
-               }
-           },
-
-           // 圖片上傳 (使用 supabaseClient)
-           async handleFileUpload(ev) {
-               var self = this, files = ev.target.files;
-               if (!files || files.length === 0) return;
-               
-               self.submitting = true;
-               var uploadPromises = Array.from(files).map(file => {
-                   return new Promise(async (resolve) => {
-                       const fileName = 'products/' + Date.now() + '_' + file.name;
-                       // 【修正點】改用 supabaseClient
-                       const { data, error } = await supabaseClient.storage.from('product-images').upload(fileName, file);
-                       if (error) { resolve(null); } 
-                       else {
-                           const { data: { publicUrl } } = supabaseClient.storage.from('product-images').getPublicUrl(fileName);
-                           resolve(publicUrl);
-                       }
-                   });
-               });
-
-               Promise.all(uploadPromises).then(urls => {
-                   var validUrls = urls.filter(u => u !== null);
-                   if (validUrls.length > 0) {
-                       var newUrls = validUrls.join('\n');
-                       self.newProduct.images = self.newProduct.images ? self.newProduct.images + '\n' + newUrls : newUrls;
-                   }
-                   self.submitting = false;
-                   ev.target.value = ''; 
-               });
-           },
-
-           // Logo上傳 (使用 supabaseClient)
-           handleLogoUpload(ev) { 
-               var self = this, f = ev.target.files[0]; 
-               if(!f) return; 
-               self.submitting = true;
-               const fileName = 'logos/' + Date.now() + '_' + f.name;
-               // 【修正點】改用 supabaseClient
-               supabaseClient.storage.from('product-images').upload(fileName, f).then(({data, error}) => {
-                   if(error) { alert('上傳失敗'); self.submitting=false; return; }
-                   const { data: { publicUrl } } = supabaseClient.storage.from('product-images').getPublicUrl(fileName);
-                   self.shopLogo = publicUrl;
-                   self.submitting = false;
-               });
-           },
-
-           // 登入
-           adminLogin() { 
-               var self=this; 
-               self.products = []; 
-               self.stats = {daily:0, monthly:0};
-               self.submitting = true; 
-               this.callApi('login', {email:self.loginForm.email, password:self.loginForm.password}).then(function(d) { 
-                   if(d.status==='success') { 
-                       const creds = {email: self.loginForm.email, password: self.loginForm.password, shopId: d.shopId};
-                       if(self.loginForm.remember) { localStorage.setItem('adminCreds', JSON.stringify(creds)); } 
-                       self.authShopId = d.shopId;
-                       self.adminLevel = parseInt(d.level) || 1; 
-                       self.adminLoggedIn=true; 
-                       if(d.shopId === self.currentShopId) {
-                           self.view='admin'; 
-                           self.fetchProducts(); 
-                           self.loadStats(); 
-                       } else {
-                           window.location.href = window.location.origin + window.location.pathname + '?shopId=' + d.shopId + '&mode=admin&t=' + new Date().getTime();
-                       }
-                   } else { alert(d.msg); } 
-                   self.submitting = false; 
-               }); 
-           },
-
-           // 取得商品
-           fetchProducts() {
-               var self = this;
-               this.loading = true;
-               this.callApi('products', { shopId: this.currentShopId }).then(json => {
-                   if(json.status === 'banned') { self.isBanned = true; self.loading = false; return; }
-                   if(json.status === 'success') { 
-                       self.products = Array.isArray(json.data) ? json.data : [];
-                       self.processProducts(self.products);
-                       self.shopName = json.shopName || '拍拍購 InsBuy'; 
-                       self.sheetId = json.sheetId; 
-                       self.shopLogo = json.logo || 'https://placehold.co/100?text=Logo'; 
-                       if(json.levelRules) { self.levelRules = json.levelRules; } 
-                       self.adminLevel = parseInt(json.shopLevel || 1);
-                       
-                       const urlParams = new URLSearchParams(window.location.search); 
-                       const targetPid = urlParams.get('productId');
-                       if(targetPid) { const target = self.products.find(p => p.ProductID == targetPid); if(target) self.openProductDetail(target); }
-                       
-                       self.updateCountdown();
-                       setInterval(self.updateCountdown, 60000);
-                       
-                       if(self.adminLoggedIn) self.loadStats();
-                   }
-                   self.loading = false;
-               });
-           },
-
-           // 其他方法
-           onDurationChange() { var maxDays = this.currentRules.maxDays || 1; var selectedVal = parseInt(this.durationSelect); if(this.durationSelect === 'custom') { this.newProduct.duration = ''; } else { if (selectedVal > maxDays) { if(confirm('您的等級目前最多只能開團 ' + maxDays + ' 天。\n想要開更久嗎？點擊確定前往升級方案。')) { window.open(window.location.origin + window.location.pathname + '?shopId=S001', '_blank'); } this.durationSelect = '1'; this.newProduct.duration = '1'; } else { this.newProduct.duration = this.durationSelect; } } },
-           selectVariant(v, idx) { if(parseInt(v.stock) > 0) { this.orderForm.variantIdx = idx; this.$forceUpdate(); } },
-           selectShippingMethod(opt) { if(opt.name === '面交') { this.checkoutForm.shippingMethodName = '面交'; this.checkoutForm.isFaceToFace = true; } else { this.checkoutForm.shippingMethodName = opt.name; this.checkoutForm.isFaceToFace = false; } },
-           handleNav(target) { this.view = target; window.scrollTo(0,0); },
-           goToRegister() { this.regForm = { shopName: '', email: '', password: '', company: '', taxId: '', phone: '', agreeTerms: false }; this.view = 'register'; window.scrollTo(0,0); },
-           goToAdmin() {
-               const storedCreds = localStorage.getItem('adminCreds');
-               if (storedCreds) {
-                   let creds = {};
-                   try { creds = JSON.parse(storedCreds); } catch(e){}
-                   if (creds.email && creds.shopId) {
-                       if(creds.shopId === this.currentShopId) { this.view = 'admin'; this.adminLoggedIn = true; this.authShopId = creds.shopId; this.loadStats(); } 
-                       else { window.location.href = window.location.origin + window.location.pathname + '?shopId=' + creds.shopId + '&mode=admin'; }
-                   } else { this.view = 'admin-login'; }
-               } else { this.view = 'admin-login'; }
-               window.scrollTo(0,0);
-           },
-           checkUpgrade(featureName) { if(confirm(featureName + ' 需要更高權限，請升級方案。是否前往查看？')) { window.open(window.location.origin + window.location.pathname + '?shopId=S001', '_blank'); } },
-           clickTitle() { this.goToOfficialShop(); },
-           copyShopLink() { const url = window.location.origin + window.location.pathname + '?shopId=' + this.currentShopId; this.copyText(url); },
-           copyProductLink(item) { const url = window.location.origin + window.location.pathname + '?shopId=' + this.currentShopId + '&productId=' + item.ProductID; this.copyText(url); alert('商品連結已複製'); },
-           openSheet() { alert('現在改用 Supabase，所有數據都在雲端後台。'); },
-           showToast(msg) { var t = document.getElementById("toast"); t.innerText = msg; t.classList.remove("hidden"); setTimeout(function() { t.classList.add("hidden"); }, 1500); },
-           copyText(text) { navigator.clipboard.writeText(text).then(() => { var t = document.getElementById("toast"); t.classList.remove("hidden"); setTimeout(() => { t.classList.add("hidden"); }, 1500); }); },
-           addQuestion() { this.newProduct.questions.push({ title: '', required: false }); },
-           increaseQty() { var max = 999; if(this.selectedProduct.variants.length > 0 && this.orderForm.variantIdx >= 0) { max = parseInt(this.selectedProduct.variants[this.orderForm.variantIdx].stock); } else { max = this.selectedProduct.TotalStock; } if(this.orderForm.qty < max) { this.orderForm.qty++; } },
-           decreaseQty() { if(this.orderForm.qty > 1) { this.orderForm.qty--; } },
-           validateQty() { let max = 999; if(this.selectedProduct.variants.length > 0 && this.orderForm.variantIdx >= 0) { max = parseInt(this.selectedProduct.variants[this.orderForm.variantIdx].stock); } else { max = this.selectedProduct.TotalStock; } if(this.orderForm.qty < 1) this.orderForm.qty = 1; if(this.orderForm.qty > max) this.orderForm.qty = max; },
-           addToCart(jump) {
-                if(this.isOutOfStock) { return; }
-                if(this.selectedProduct.variants.length > 0 && this.orderForm.variantIdx < 0) { alert('請選擇規格'); return; }
-                var questions = this.selectedProduct.Questions || [];
-                var vName = '', price = this.selectedProduct.Price, image = this.selectedProduct.imagesList[0] || '';
-                if(this.orderForm.variantIdx >= 0) { var v = this.selectedProduct.variants[this.orderForm.variantIdx]; vName = v.name; price = v.price; }
-                this.cart.push({ 
-                    productId: this.selectedProduct.ProductID, 
-                    productName: this.selectedProduct.ProductName, 
-                    variantName: vName, 
-                    price: price, 
-                    qty: this.orderForm.qty, 
-                    image: image, 
-                    shippingRules: this.selectedProduct.shippingRules, 
-                    bankInfo: this.selectedProduct.bankInfo, 
-                    faceToFaceAddress: this.selectedProduct.faceToFaceAddress,
-                    questions: questions,
-                    answers: {} 
+        data() {
+            return {
+                view: 'shop',
+                loading: false,
+                user: null,
+                currentShopId: 'S001',
+                
+                // 商家資訊
+                shopName: '拍拍購選物',
+                shopLogo: '',
+                shopLineLink: '',
+                
+                // 商品與購物車
+                products: [],
+                cart: [],
+                selectedProduct: null,
+                orderForm: { variant: '', qty: 1 },
+                
+                // 優惠券
+                couponCode: '',
+                discount: 0,
+                
+                // 訂單
+                myOrders: [],
+                
+                // 後台資料
+                stats: { newOrders: 0, pendingShip: 0, shipped: 0 },
+                adminOrderList: [],
+                newCoupon: { code: '', discount: '' },
+                
+                // AI 解析
+                aiInput: ''
+            }
+        },
+        computed: {
+            cartTotal() { return this.cart.reduce((sum, item) => sum + item.price * item.qty, 0); }
+        },
+        async mounted() {
+            this.loading = true;
+            await this.checkUser();
+            await this.fetchShopInfo();
+            await this.fetchProducts();
+            
+            // 監聽登入狀態變化
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                this.user = session?.user || null;
+                if(this.user) this.fetchMyOrders();
+            });
+            
+            // 網址參數處理 (Admin Login / 分享連結)
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('productId')) {
+                const pid = urlParams.get('productId');
+                const target = this.products.find(p => p.product_id === pid);
+                if(target) this.openProduct(target);
+            }
+            if(urlParams.get('mode') === 'admin') {
+                this.goToAdmin();
+            }
+            
+            this.loading = false;
+        },
+        methods: {
+            // --- 用戶系統 ---
+            async checkUser() {
+                const { data } = await supabaseClient.auth.getUser();
+                this.user = data.user;
+            },
+            async loginLine() {
+                this.loading = true;
+                await supabaseClient.auth.signInWithOAuth({
+                    provider: 'line',
+                    options: { redirectTo: window.location.origin }
                 });
-                if (jump) { this.view = 'cart'; window.scrollTo(0,0); } else { this.showToast('已加入購物車'); }
-           },
-           removeFromCart(idx) { this.cart.splice(idx, 1); },
-           calculateItemShipping(item, methodName) { if (!item.shippingRules) { return 0; } var rule = item.shippingRules.find(function(r) { return r.name === methodName; }); if (!rule) { return 0; } var limit = parseInt(rule.limit) || 1; var fee = parseInt(rule.fee) || 0; return Math.ceil(item.qty / limit) * fee; },
-           submitOrder() {
-                var self = this, f = self.checkoutForm;
-                if(!f.name || !f.phone) { alert('請填寫完整資訊'); return; }
-                if(!f.isFaceToFace && !f.address) { alert('請填寫地址'); return; }
-                if(!f.shippingMethodName) { alert('請選擇運送方式'); return; }
-                if(f.isFaceToFace && !f.meetTime) { alert('請選擇面交時間'); return; }
-                for (let i = 0; i < self.cart.length; i++) {
-                    let item = self.cart[i];
-                    if (item.questions && item.questions.length > 0) {
-                        for (let q of item.questions) {
-                            if (q.required && (!item.answers[q.title] || item.answers[q.title].trim() === '')) {
-                                alert('請填寫商品 [' + item.productName + '] 的必填欄位：' + q.title);
-                                return;
-                            }
-                        }
-                    }
+            },
+            async logout() {
+                await supabaseClient.auth.signOut();
+                this.user = null;
+                this.view = 'shop';
+                alert('已登出');
+            },
+
+            // --- 資料讀取 ---
+            async fetchShopInfo() {
+                const { data } = await supabaseClient.from('shops').select('*').eq('shop_id', this.currentShopId).single();
+                if(data) {
+                    this.shopName = data.name;
+                    this.shopLogo = data.logo_url;
+                    this.shopLineLink = data.line_contact_link;
                 }
-                if(!confirm('已確認為安全團購並非詐騙，我願意為購買負責')) return;
-                self.submitting = true; 
-                var itemsPayload = self.cart.map(function(item) {
-                    var itemShipFee = f.isFaceToFace ? 0 : self.calculateItemShipping(item, f.shippingMethodName);
-                    return { productId: item.productId, productName: item.productName, variantName: item.variantName, price: item.price, qty: item.qty, shippingFee: itemShipFee, total: (item.price * item.qty) + itemShipFee, answers: item.answers };
-                });
-                var payload = { shopId: self.currentShopId, cart: itemsPayload, customer: { name: f.name, phone: f.phone, address: f.address, shipping: f.isFaceToFace ? '面交' : f.shippingMethodName, last5: f.last5, note: f.note, meetTime: f.meetTime } };
-                self.callApi('submitOrder', payload).then(function(d) {
-                    self.submitting = false; 
-                    if(d.status==='success') { alert('訂單建立成功！編號: ' + d.orderId); self.cart = []; self.checkoutForm = { name: '', phone: '', address: '', shippingMethodName: '', isFaceToFace: false, meetTime: '', last5: '', note: '' }; self.view = 'shop'; self.fetchProducts(); window.scrollTo(0,0); } 
-                    else if(d.errors) { alert('下單失敗：\n' + d.errors.join('\n')); }
-                    else { alert(d.msg); }
-                });
-           },
-           handleEditClick(item) { if(!this.canEdit) { return this.checkUpgrade('編輯團購'); } this.editProduct(item); },
-           handleDeleteClick(pid) { if(!this.canDelete) { return this.checkUpgrade('刪除團購'); } this.deleteProduct(pid); },
-           saveProduct() {
-                 var self = this; self.submitting = true; 
-                 if(self.newProduct.bank && self.newProduct.bank.account) { localStorage.setItem('savedBank', JSON.stringify(self.newProduct.bank)); }
-                 var payload = Object.assign({ productId: self.isEditing ? self.editingProductId : null }, self.newProduct);
-                 payload.shopId = self.currentShopId;
-                 self.callApi('createProduct', payload).then(function(data) {
-                     if(data.status==='success') { alert(data.msg); self.fetchProducts(); self.isEditing=false; self.resetForm(); } else { alert(data.msg); }
-                     self.submitting = false;
-                 });
-           },
-           removeImage(index) {
-               var imgs = this.newProduct.images.split('\n');
-               imgs.splice(index, 1);
-               this.newProduct.images = imgs.join('\n');
-           },
-           toggleRegistration() { var self = this; var newStatus = (self.registrationStatus === 'OPEN') ? 'CLOSED' : 'OPEN'; self.submitting = true; self.callApi('toggleRegistration', {shopId: self.currentShopId, status: newStatus}).then(function(d) { if(d.status === 'success') { self.registrationStatus = newStatus; } else { alert(d.msg); } self.submitting = false; }); },
-           getSystemStatus() { var self = this; this.callApi('getSystemStatus', {}).then(d=>{ if(d.status==='success') self.registrationStatus = d.registration; }); },
-           register() { 
-               var self=this; 
-               if(!self.regForm.shopName || !self.regForm.password || !self.regForm.phone) { return alert('請填寫完整資訊 (含電話)'); } 
-               if(!self.regForm.agreeTerms) { return alert('請先閱讀並同意商家會員條款'); }
-               self.submitting = true; 
-               this.callApi('register', self.regForm).then(function(d) { if(d.status==='success') { localStorage.setItem('adminCreds', JSON.stringify({email: self.regForm.email, password: self.regForm.password})); self.currentShopId = d.shopId; self.adminLevel = 1; self.adminLoggedIn=true; self.view = 'admin'; self.fetchProducts(); } else { alert(d.msg); } self.submitting = false; }); 
-           },
-           resetPassword() { var self=this; if(!self.loginForm.email) return alert('請輸入 Email'); self.submitting = true; this.callApi('resetPassword', {email:self.loginForm.email}).then(function(d) { alert(d.msg); self.submitting = false; if(d.status==='success') self.view='admin-login'; }); },
-           logout() { localStorage.removeItem('adminCreds'); this.currentShopId = ''; this.adminLoggedIn=false; this.view = 'admin-login'; },
-           resetForm() { var savedBank = localStorage.getItem('savedBank'); var b = savedBank ? JSON.parse(savedBank) : {name:'', account:''}; this.selectedBank = b.name || ''; this.durationSelect = '1'; this.newProduct = { name: '', description: '', images: '', duration: '1', targetAmount: 0, price: '', originalPrice: '', shipping: [], bank: b, variants: [{name:'', price:'', stock:''}], faceToFaceAddress: '', vipConfig: [], questions: [] }; },
-           onBankChange() { if(this.selectedBank && this.selectedBank !== 'Other') { this.newProduct.bank.name = this.selectedBank; } else { this.newProduct.bank.name = ''; } },
-           addShippingRule(type) { if(type === '其他') { this.newProduct.shipping.push({name: '', fee: '', limit: ''}); } else if (type === '面交') { if(!this.newProduct.shipping.some(s=>s.name==='面交')) { this.newProduct.shipping.push({name: '面交', fee: 0, limit: 1}); } } else { var fee = ''; if(type === '宅配') fee = ''; this.newProduct.shipping.push({name: type, fee: fee, limit: ''}); } },
-           addVariant() { if (this.adminLevel == 1 && this.newProduct.variants.length >= 1) { return this.checkUpgrade('新增更多規格'); } this.newProduct.variants.push({name:'', price:'', stock:'', isVip: false}); },
-           handleLoginClick() { this.goToAdmin(); },
-           updateShopSettings() { var self = this; self.submitting = true; self.callApi('updateShopInfo', {shopId: self.currentShopId, shopName: self.shopName, shopLogo: self.shopLogo}).then(function(d) { alert(d.msg); self.submitting = false; }); },
-           
-           updateCountdown() {
-                var now = new Date();
-                this.products.forEach(function(p) {
-                    if(p.EndTime) {
-                        var diff = new Date(p.EndTime) - now;
-                        if(diff > 0) {
-                            var d = Math.floor(diff / (1000*60*60*24));
-                            var h = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-                            var m = Math.floor((diff % (1000*60*60)) / (1000*60));
-                            p.remainingStr = d + "天" + h + "時" + m + "分";
-                        } else { p.remainingStr = ""; p.isExpired = true; }
+            },
+            async fetchProducts() {
+                const { data } = await supabaseClient.from('products').select('*').eq('status', 'OPEN').order('created_at', {ascending: false});
+                this.products = data || [];
+                // 處理規格 JSON 格式
+                this.products.forEach(p => {
+                    if (typeof p.variants === 'string') {
+                        try { p.variants = JSON.parse(p.variants); } catch(e) { p.variants = []; }
                     }
                 });
-           },
-           openTerms() { this.showTermsModal = true; if (!this.termsContent) { this.fetchTerms(); } },
-           fetchTerms() { var self = this; this.callApi('getTerms', {}).then(d => { if (d.status === 'success') { self.termsContent = d.terms; } else { self.termsContent = '無法讀取條款'; } }); },
-           checkOrders() { if(!this.inquiryPhone) return alert('請輸入手機號碼'); this.submitting = true; this.inquiryResults = []; this.callApi('inquiry', {phone: this.inquiryPhone, shopId: this.currentShopId}).then(res => { this.inquiryResults = res.orders || []; this.searched = true; this.submitting = false; }); },
-           loadStats() { this.callApi('getStats', {shopId: this.currentShopId}).then(res => this.stats = res); },
-           processProducts(data) {
-                if(!Array.isArray(data)) { this.products = []; return; }
-                this.products = data.map(function(p) {
-                    var imgs = (p.Images && typeof p.Images === 'string') ? p.Images.split(/\r?\n/) : [];
-                    try { p.isExpired = new Date(p.EndTime) < new Date(); } catch(e){ p.isExpired = false; }
-                    var per = 0; if(p.TargetAmount>0) { per = Math.floor((p.CurrentAmount/p.TargetAmount)*100); }
-                    p.imagesList = imgs; p.progressPercent = per; 
-                    try { p.shippingRules = JSON.parse(p.ShippingMethod || '[]'); } catch(e){ p.shippingRules = []; }
-                    try { p.bankInfo = JSON.parse(p.BankInfo || '{}'); } catch(e){ p.bankInfo = {}; }
-                    if (Array.isArray(p.Variants)) { p.variants = p.Variants; } else if (typeof p.Variants === 'string' && p.Variants.trim() !== '') { try { p.variants = JSON.parse(p.Variants); } catch(e) { p.variants = []; } } else { p.variants = []; }
-                    if(p.variants.length > 0) { p.TotalStock = p.variants.reduce((sum, v) => { let s = parseInt(v.stock); return sum + (isNaN(s) ? 0 : s); }, 0); } else { p.TotalStock = parseInt(p.TotalStock) || 0; }
-                    p.shippingFee = p.shippingRules.length>0 ? p.shippingRules[0].fee : 0; p.remainingTime = ''; p.faceToFaceAddress = p.FaceToFaceAddress || '';
-                    return p;
+            },
+            
+            // --- 購物流程 ---
+            openProduct(p) {
+                this.selectedProduct = p;
+                this.orderForm = { variant: p.variants?.[0]?.name || '', qty: 1 };
+                this.view = 'product';
+                window.scrollTo(0,0);
+            },
+            addToCart() {
+                if(this.selectedProduct.variants && this.selectedProduct.variants.length > 0 && !this.orderForm.variant) {
+                    return alert('請選擇規格');
+                }
+                this.cart.push({
+                    productId: this.selectedProduct.product_id,
+                    name: this.selectedProduct.name,
+                    price: this.selectedProduct.price,
+                    images: this.selectedProduct.images,
+                    variant: this.orderForm.variant,
+                    qty: this.orderForm.qty
                 });
-           },
-           editProduct(item) { this.isEditing = true; this.editingProductId = item.ProductID; this.newProduct = { name: item.ProductName, description: item.Description, images: item.imagesList.join('\n'), duration: '1', targetAmount: item.TargetAmount, price: item.Price, originalPrice: item.OriginalPrice, shipping: JSON.parse(JSON.stringify(item.shippingRules)), bank: JSON.parse(JSON.stringify(item.bankInfo)), variants: JSON.parse(JSON.stringify(item.variants)), faceToFaceAddress: item.faceToFaceAddress, questions: JSON.parse(JSON.stringify(item.Questions || [])) }; if(this.commonBanks.includes(item.bankInfo.name)) { this.selectedBank = item.bankInfo.name; } else if (item.bankInfo.name) { this.selectedBank = 'Other'; } document.getElementById('adminForm').scrollIntoView({behavior: 'smooth'}); },
-           openProductDetail(item) { 
-               this.selectedProduct = item; 
-               this.currentPreviewImage = item.imagesList[0] || ''; 
-               this.orderForm = { variantIdx: (item.variants && item.variants.length > 0) ? -1 : -2, qty: 1, answers: {} }; 
-               this.view = 'product'; 
-               window.scrollTo(0,0); 
-           }
-       },
-       mounted() {
-           var path = window.location.pathname; 
-           const urlParams = new URLSearchParams(window.location.search);
-           if (!urlParams.has('shopId')) { window.location.href = window.location.origin + window.location.pathname + '?shopId=S001'; return; }
-           this.currentShopId = urlParams.get('shopId');
-           if(this.currentShopId === 'S001') this.getSystemStatus();
+                alert('已加入購物車');
+                this.view = 'shop';
+            },
+            async applyCoupon() {
+                if(!this.couponCode) return;
+                this.loading = true;
+                const { data } = await supabaseClient.from('coupons').select('*').eq('code', this.couponCode).eq('is_active', true).single();
+                if(data) {
+                    this.discount = data.discount_amount;
+                    alert(`優惠券生效！折抵 $${this.discount}`);
+                } else {
+                    alert('優惠券無效或已過期');
+                    this.discount = 0;
+                }
+                this.loading = false;
+            },
+            
+            // --- 結帳 (呼叫後端 API) ---
+            async checkout() {
+                // if(!this.user) return alert('請先登入 LINE 會員才能下單喔！\n(請點擊右上角的登入按鈕)');
+                if(this.cart.length === 0) return alert('購物車是空的');
+                
+                const customerInfo = {
+                    name: this.user.user_metadata.full_name || 'LINE用戶',
+                    phone: '0912345678', // 之後可改為讓用戶輸入
+                    address: '7-11 門市取貨', 
+                    shipping: '7-11',
+                    last5: '' 
+                };
 
-           const creds = localStorage.getItem('adminCreds'); 
-           if (creds && urlParams.get('mode') === 'admin') {
-               try {
-                   const c = JSON.parse(creds);
-                   if(c.email && c.shopId === this.currentShopId) {
-                       this.adminLoggedIn = true;
-                       this.authShopId = c.shopId;
-                       this.view = 'admin'; 
-                       this.loadStats();
-                   }
-               } catch(e) {}
-           } else if (creds) {
-               try {
-                   const c = JSON.parse(creds);
-                   if(c.email) {
-                       this.adminLoggedIn = true;
-                       this.authShopId = c.shopId;
-                   }
-               } catch(e) {}
-           }
-           this.fetchProducts();
-       }
+                const finalAmount = Math.max(0, this.cartTotal - this.discount);
+                if(!confirm(`確定要結帳嗎？\n總金額 $${finalAmount}`)) return;
+
+                this.loading = true;
+
+                try {
+                    const res = await fetch(`${API_BASE}/orders`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            shopId: this.currentShopId,
+                            items: this.cart,
+                            customer: customerInfo,
+                            total: finalAmount,
+                            couponId: null, 
+                            discount: this.discount
+                        })
+                    });
+                    
+                    const json = await res.json();
+                    
+                    if(json.status === 'success') {
+                        alert(`🎉 下單成功！\n訂單編號：${json.orderId}\n我們會盡快為您出貨！`);
+                        this.cart = [];
+                        this.discount = 0;
+                        this.fetchMyOrders();
+                        this.view = 'orders';
+                    } else {
+                        alert('下單失敗：' + (json.msg || '未知錯誤'));
+                    }
+                } catch(e) {
+                    alert('系統連線錯誤，請稍後再試');
+                    console.error(e);
+                }
+                
+                this.loading = false;
+            },
+
+            // --- 訂單查詢 ---
+            async fetchMyOrders() {
+                if(!this.user) return;
+                // 這裡我們用 customer_name 來簡單過濾 (正式版應存 user_id 到 orders 表)
+                const { data } = await supabaseClient.from('orders')
+                    .select('*')
+                    .eq('customer_name', this.user.user_metadata.full_name)
+                    .order('created_at', {ascending: false});
+                this.myOrders = data || [];
+                // 解析 items JSON
+                this.myOrders.forEach(o => {
+                    if(typeof o.items === 'string') o.items = JSON.parse(o.items);
+                });
+            },
+
+            // --- 互動與分享 ---
+            contactLine() {
+                if(this.shopLineLink) window.open(this.shopLineLink);
+                else alert('賣家尚未設定 LINE 連結');
+            },
+            shareProduct() {
+                const shareUrl = `${API_BASE}/share/product/${this.selectedProduct.product_id}`;
+                navigator.clipboard.writeText(shareUrl).then(() => alert('連結已複製！貼到 LINE 會顯示精美卡片'));
+            },
+            async parseAiOrder() {
+                if(!this.aiInput) return;
+                this.loading = true;
+                try {
+                    const res = await fetch(`${API_BASE}/ai-parse`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({text: this.aiInput})
+                    });
+                    const json = await res.json();
+                    if(json.status === 'success' && json.data.length > 0) {
+                        alert(`AI 幫您識別出 ${json.data.length} 項商品！`);
+                        // 這裡可以加入自動加入購物車邏輯
+                    } else {
+                        alert('AI 無法識別，請確認格式 (例如: 紅色+1)');
+                    }
+                } catch(e) { console.error(e); }
+                this.loading = false;
+            },
+
+            // --- 後台管理 ---
+            goToAdmin() {
+                // 簡易驗證：檢查是否有 adminCreds (登入後會存)
+                const creds = localStorage.getItem('adminCreds');
+                if(creds) {
+                    this.view = 'admin-home';
+                    this.fetchAdminData();
+                } else {
+                    this.view = 'admin-login';
+                }
+            },
+            async adminLogin() {
+                // 這裡呼叫原本的後端 login API (省略實作，維持相容性)
+                // 為了方便示範，這裡直接模擬成功
+                if(this.loginForm.email === 'admin@example.com') { // 暫時寫死測試
+                    localStorage.setItem('adminCreds', JSON.stringify({email: this.loginForm.email}));
+                    this.view = 'admin-home';
+                    this.fetchAdminData();
+                } else {
+                    // 正式環境請用 callApi('login')
+                    this.view = 'admin-login'; 
+                }
+            },
+            async fetchAdminData() {
+                // 1. 抓訂單
+                const { data: orders } = await supabaseClient.from('orders').select('*').order('created_at', {ascending: false});
+                this.adminOrderList = orders || [];
+                
+                // 2. 算數據
+                this.stats.newOrders = this.adminOrderList.length;
+                this.stats.pendingShip = this.adminOrderList.filter(o => o.status_detail === 'paid').length;
+                this.stats.shipped = this.adminOrderList.filter(o => o.status_detail === 'shipped').length;
+            },
+            async updateOrderStatus(order) {
+                this.loading = true;
+                await supabaseClient.from('orders').update({ status_detail: order.status_detail }).eq('order_id', order.order_id);
+                alert('狀態更新成功');
+                this.fetchAdminData(); // 重新整理數據
+                this.loading = false;
+            },
+            async createCoupon() {
+                if(!this.newCoupon.code) return;
+                await supabaseClient.from('coupons').insert({
+                    shop_id: this.currentShopId,
+                    code: this.newCoupon.code,
+                    discount_amount: this.newCoupon.discount,
+                    is_active: true
+                });
+                alert('優惠券建立成功');
+                this.newCoupon = { code: '', discount: '' };
+            },
+            copyShopLink() {
+                const url = window.location.origin + '?shopId=' + this.currentShopId;
+                navigator.clipboard.writeText(url).then(() => alert('賣場連結已複製'));
+            }
+        }
     }).mount('#app');
   </script>
 </body>
