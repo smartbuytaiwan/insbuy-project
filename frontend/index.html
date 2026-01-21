@@ -13,7 +13,7 @@
     [v-cloak] { display: none; }
     body { background-color: #F8FAFC; font-family: 'Noto Sans TC', sans-serif; padding-bottom: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
     
-    /* === 極致 UI 系統 (紅色質感) === */
+    /* === 極致 UI 系統 === */
     .input-label { @apply block text-[13px] font-bold text-slate-500 mb-2 ml-1 tracking-wide; }
     .input-box { 
         @apply w-full h-[52px] border border-slate-200 rounded-2xl px-4 text-[16px] bg-white transition-all shadow-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none appearance-none text-slate-700; 
@@ -30,16 +30,16 @@
     .btn-danger {
         @apply w-full h-[54px] rounded-2xl font-bold text-white shadow-lg shadow-slate-300/50 transition-all duration-200 active:scale-95 flex items-center justify-center text-[16px] bg-slate-500 cursor-pointer; 
     }
-    .btn-secondary {
-        @apply w-full h-[54px] rounded-2xl font-bold text-slate-600 bg-white border border-slate-200 shadow-sm transition-all active:scale-95 flex items-center justify-center text-[16px] cursor-pointer;
-    }
     .btn-outline {
         @apply w-full h-[54px] rounded-2xl font-bold text-rose-600 border border-rose-200 bg-white shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center text-[16px] cursor-pointer;
     }
 
-    .capsule-tabs { @apply flex gap-2 overflow-x-auto pb-2 px-1 mb-2 no-scrollbar; }
-    .capsule-btn { @apply px-5 py-2 rounded-full text-xs font-bold border transition-all whitespace-nowrap cursor-pointer select-none; }
-    .capsule-btn.active { @apply bg-rose-600 text-white border-rose-600 shadow-md; }
+    /* 膠囊分頁籤 (橫向排列，不擠在一起) */
+    .capsule-tabs { @apply flex gap-3 overflow-x-auto pb-2 mb-4 px-1 no-scrollbar; }
+    .capsule-btn { 
+        @apply flex-1 py-2.5 px-4 text-center text-xs font-bold rounded-full transition-all duration-300 cursor-pointer select-none border whitespace-nowrap shadow-sm; 
+    }
+    .capsule-btn.active { @apply bg-rose-600 text-white border-rose-600 shadow-md transform scale-105; }
     .capsule-btn.inactive { @apply bg-white text-slate-500 border-slate-200 hover:border-rose-300; }
 
     .card { @apply bg-white p-5 rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-50 mb-4; }
@@ -48,8 +48,7 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     
     .tag-btn { @apply border border-slate-200 bg-slate-50 text-slate-500 rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-200 cursor-pointer active:scale-95 select-none hover:bg-white hover:border-slate-300; }
-    .tag-btn.active { @apply border-rose-500 bg-rose-50 text-rose-600 shadow-sm; }
-
+    
     .safe-pb { padding-bottom: calc(env(safe-area-inset-bottom) + 100px); }
     .back-btn { @apply absolute top-3 left-3 z-50 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center backdrop-blur-md shadow-md active:scale-90 transition border border-slate-100; }
     .img-preview { @apply w-full aspect-square object-cover rounded-xl border border-slate-100 shadow-sm bg-slate-50; }
@@ -86,7 +85,7 @@
                     <div class="text-xs text-rose-100 mt-1 font-mono">ID: {{ currentShopId }}</div>
                 </div>
             </div>
-            <button @click="logout" class="absolute top-4 right-4 text-xs bg-white/20 px-3 py-1 rounded-full backdrop-blur-md hover:bg-white/30 transition">登出</button>
+            <button @click="logout" class="absolute top-4 right-4 text-xs bg-white/20 px-3 py-1 rounded-full backdrop-blur-md hover:bg-white/30 transition border border-white/30">登出</button>
         </div>
 
         <div class="grid grid-cols-3 gap-3 mb-6">
@@ -96,7 +95,9 @@
         </div>
 
         <div class="capsule-tabs">
-            <button v-for="t in ['OPEN','CLOSED','ARCHIVED']" :key="t" @click="adminTab=t" class="capsule-btn" :class="adminTab===t ? 'active' : 'inactive'">{{ t==='OPEN'?'團購中':(t==='CLOSED'?'已結束':'已刪除') }}</button>
+            <div @click="adminTab='OPEN'" class="capsule-btn" :class="adminTab==='OPEN' ? 'active' : 'inactive'">團購中 ({{ getCount('OPEN') }})</div>
+            <div @click="adminTab='CLOSED'" class="capsule-btn" :class="adminTab==='CLOSED' ? 'active' : 'inactive'">已結束 ({{ getCount('CLOSED') }})</div>
+            <div @click="adminTab='ARCHIVED'" class="capsule-btn" :class="adminTab==='ARCHIVED' ? 'active' : 'inactive'">已刪除 ({{ getCount('ARCHIVED') }})</div>
         </div>
 
         <div v-if="filteredAdminProducts.length > 0" class="space-y-3">
@@ -123,7 +124,7 @@
             <div class="flex gap-2 mb-3"><input v-model="searchQuery" class="input-box h-10 text-sm" placeholder="輸入Email或名稱..."></div>
             <div class="max-h-60 overflow-y-auto space-y-2">
                 <div v-for="shop in filteredShops" :key="shop.shop_id" class="flex justify-between items-center p-2 bg-slate-50 rounded-lg border border-slate-100">
-                    <div class="truncate flex-1 mr-2"><div class="font-bold text-sm text-slate-700">{{ shop.name || '未命名' }}</div><div class="text-[10px] text-slate-400">{{ shop.email }}</div></div>
+                    <div class="truncate flex-1 mr-2"><div class="font-bold text-sm text-slate-700">{{ shop.name }}</div><div class="text-[10px] text-slate-400">{{ shop.email }}</div></div>
                     <input type="number" v-model.number="shop.level" @change="updateShopLevel(shop)" class="input-box w-16 h-8 text-center text-sm">
                 </div>
             </div>
@@ -178,13 +179,13 @@
                     <div><label class="input-label">開團天數</label><select v-model="newProduct.duration" class="input-box bg-white"><option value="1">1 天</option><option value="3">3 天</option><option value="5">5 天</option><option value="7">7 天</option><option value="15" v-if="currentLevelConfig.max_duration >= 15">15 天</option><option value="30" v-if="currentLevelConfig.max_duration >= 30">30 天</option></select></div>
                     <div><label class="input-label">目標金額</label><div class="money-wrapper"><span class="money-symbol">$</span><input v-model="newProduct.targetAmount" type="number" class="input-box money-input !text-slate-500" placeholder="0"></div></div>
                 </div>
-                <div class="pt-4 border-t border-slate-100"><label class="input-label">運送方式</label><div class="flex flex-wrap gap-2 mb-3"><div v-for="t in logisticsOptions" :key="t" @click="addShippingRule(t)" class="tag-btn"><i class="fa-solid fa-plus text-[10px] mr-1"></i>{{ t }}</div></div><div v-if="newProduct.shipping.length > 0" class="space-y-2"><div v-for="(rule, idx) in newProduct.shipping" :key="idx" class="bg-rose-50 border border-rose-100 rounded-xl p-3"><div class="flex justify-between items-center mb-2"><span class="text-sm font-bold text-rose-700 flex items-center gap-2"><i class="fa-solid fa-truck"></i> {{ rule.name }}</span><i @click="newProduct.shipping.splice(idx,1)" class="fa-solid fa-times text-slate-300 cursor-pointer hover:text-red-500"></i></div><div class="flex gap-2"><div class="flex-1"><span class="text-[10px] text-slate-400 block mb-1">運費金額 ($)</span><input v-model="rule.fee" type="number" class="input-box h-9 text-sm text-center"></div><div class="flex-1"><span class="text-[10px] text-slate-400 block mb-1">每箱數量 (件)</span><input v-model="rule.limit" type="number" class="input-box h-9 text-sm text-center"></div></div></div></div></div>
+                <div class="pt-4 border-t border-slate-100"><label class="input-label">運送方式</label><div class="flex flex-wrap gap-2 mb-3"><div v-for="t in logisticsOptions" :key="t" @click="addShippingRule(t)" class="tag-btn"><i class="fa-solid fa-plus text-[10px] mr-1"></i>{{ t }}</div></div><div v-if="newProduct.shipping.length > 0" class="space-y-2"><div v-for="(rule, idx) in newProduct.shipping" :key="idx" class="bg-rose-50 border border-rose-100 rounded-xl p-3"><div class="flex justify-between items-center mb-2"><span class="text-sm font-bold text-rose-700 flex items-center gap-2"><i class="fa-solid fa-truck"></i> {{ rule.name }}</span><i @click="newProduct.shipping.splice(idx,1)" class="fa-solid fa-times text-slate-300 cursor-pointer hover:text-red-500"></i></div><div class="flex gap-2"><div class="flex-1"><span class="text-[10px] text-slate-400 block mb-1">運費金額</span><input v-model="rule.fee" type="number" class="input-box h-9 text-sm text-center"></div><div class="flex-1"><span class="text-[10px] text-slate-400 block mb-1">每箱數量</span><input v-model="rule.limit" type="number" class="input-box h-9 text-sm text-center"></div></div></div></div></div>
                 <div class="pt-4 border-t border-slate-100 mt-4"><label class="input-label">收款銀行</label><select v-model="selectedBankName" @change="updateBankInfo" class="input-box mb-2 h-12"><option value="" disabled>請選擇銀行</option><option v-for="b in commonBanks" :value="b">{{ b }}</option></select><input v-model="newProduct.bank.account" class="input-box font-mono tracking-widest" placeholder="銀行帳號"></div>
             </div>
 
             <div class="pt-4 pb-8 space-y-3">
                 <button @click="saveProduct" class="btn-main shadow-lg shadow-rose-200">{{ isEditing ? '儲存變更' : '確認上架' }}</button>
-                <button v-if="isEditing && editingProductStatus === 'OPEN'" @click="closeGroupBuying" class="btn-danger shadow-lg shadow-slate-300"><i class="fa-regular fa-clock mr-2"></i> 立即結團</button>
+                <button v-if="isEditing && editingProductStatus === 'OPEN'" @click="updateStatus(editingProductId, 'CLOSED')" class="btn-danger shadow-lg shadow-slate-300"><i class="fa-regular fa-clock mr-2"></i> 立即結團</button>
             </div>
         </div>
     </div>
@@ -192,34 +193,25 @@
     <div v-if="view === 'admin-login'" class="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50 min-h-screen relative overflow-hidden">
         <div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-rose-100 rounded-full blur-3xl opacity-60"></div>
         <div class="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-60"></div>
-
         <div class="w-full max-w-sm bg-white p-8 rounded-3xl shadow-xl border border-white/50 relative z-10">
             <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
-                    <i class="fa-solid fa-store"></i>
-                </div>
+                <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm"><i class="fa-solid fa-store"></i></div>
                 <h1 class="text-2xl font-black text-slate-800 tracking-tight">商家後台</h1>
                 <p class="text-sm text-slate-400 mt-1">請輸入您的管理員帳號</p>
             </div>
-            
             <div class="space-y-5">
                 <div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">Email</label><input v-model="loginForm.email" placeholder="name@example.com" class="input-box bg-slate-50 border-slate-100 focus:bg-white transition-colors"></div>
                 <div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">密碼</label><input v-model="loginForm.password" type="password" placeholder="••••••••" class="input-box bg-slate-50 border-slate-100 focus:bg-white transition-colors"></div>
                 <button @click="adminLogin" class="btn-main shadow-rose-200 shadow-lg mt-2">登入後台 <i class="fa-solid fa-arrow-right ml-2"></i></button>
             </div>
-
-            <div class="mt-6 flex justify-between text-xs text-slate-400 font-bold px-1">
-                <span @click="alert('請聯繫客服')" class="cursor-pointer hover:text-rose-500 transition">註冊新帳號</span>
-                <span @click="alert('請聯繫客服')" class="cursor-pointer hover:text-rose-500 transition">忘記密碼?</span>
-            </div>
+            <div class="mt-6 flex justify-between text-xs text-slate-400 font-bold px-1"><span @click="alert('請聯繫客服')" class="cursor-pointer hover:text-rose-500 transition">註冊新帳號</span><span @click="alert('請聯繫客服')" class="cursor-pointer hover:text-rose-500 transition">忘記密碼?</span></div>
         </div>
-        
         <button @click="view='shop'" class="mt-8 text-slate-400 text-sm font-bold flex items-center gap-2 hover:text-rose-600 transition"><i class="fa-solid fa-arrow-left"></i> 返回前台首頁</button>
     </div>
 
     <div v-if="view === 'shop'" class="p-4 pb-28 pt-4">
-        <div v-if="products.length > 0" class="grid grid-cols-2 gap-3">
-            <div v-for="p in products" :key="p.product_id" @click="openProduct(p)" class="card !p-0 !mb-0 overflow-hidden active:scale-[0.98] transition cursor-pointer">
+        <div v-if="buyerProducts.length > 0" class="grid grid-cols-2 gap-3">
+            <div v-for="p in buyerProducts" :key="p.product_id" @click="openProduct(p)" class="card !p-0 !mb-0 overflow-hidden active:scale-[0.98] transition cursor-pointer">
                 <div class="aspect-square bg-slate-100 relative"><img :src="p.images?.split('\n')[0]" class="w-full h-full object-cover"><div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full font-bold">{{ getCountdown(p.end_time) }}</div></div>
                 <div class="p-3"><div class="font-bold text-slate-800 line-clamp-1 text-[15px] mb-1">{{ p.name }}</div><div class="flex justify-between items-center mt-2"><span class="text-rose-600 font-black text-lg">${{ p.price }}</span><div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm"><i class="fa-solid fa-plus"></i></div></div></div>
             </div>
@@ -287,6 +279,8 @@
             isAdminLoggedIn() { return !!localStorage.getItem('adminCreds'); },
             cartTotal() { return this.cart.reduce((sum, i) => sum + i.finalPrice * i.qty, 0); },
             filteredAdminProducts() { if(!this.products) return []; return this.products.filter(p => p.status === this.adminTab); },
+            // 核心修正：買家頁面只顯示 OPEN
+            buyerProducts() { return this.products.filter(p => p.status === 'OPEN'); },
             viewTitle() { return {'shop':'拍拍購','admin-home':'商家後台','admin-create':'商品編輯','admin-vip':'會員與權限','admin-orders':'訂單管理'}[this.view] || 'InsBuy'; },
             filteredShops() { if(!this.searchQuery) return this.allShops; return this.allShops.filter(s => s.name?.includes(this.searchQuery) || s.email?.includes(this.searchQuery)); },
             currentLevelConfig() { return this.levelConfigs.find(c => c.level_id === this.shopLevel) || { max_images:3, max_variants:2, max_duration:7 }; }
@@ -302,13 +296,13 @@
             if(new URLSearchParams(window.location.search).get('mode') === 'admin') this.goToAdmin();
         },
         methods: {
-            // --- 核心邏輯 ---
+            // --- 資料獲取 ---
             async fetchShopInfo() {
                 const { data } = await supabaseClient.from('shops').select('*').eq('shop_id', this.currentShopId).single();
                 if(data) { this.shopName = data.name; this.shopLevel = parseInt(data.level) || 1; }
             },
             async fetchProducts() { 
-                const { data } = await supabaseClient.from('products').select('*').neq('status', 'ARCHIVED').order('created_at', {ascending: false}); 
+                const { data } = await supabaseClient.from('products').select('*').neq('status', 'REMOVED').order('created_at', {ascending: false}); 
                 this.products = data || []; 
                 this.products.forEach(p => { if(typeof p.variants === 'string') p.variants = JSON.parse(p.variants); });
                 this.checkAutoClose();
@@ -317,14 +311,15 @@
                 const { data } = await supabaseClient.from('orders').select('*').order('created_at', {ascending: false});
                 this.adminOrderList = data || [];
             },
+            getCount(status) { return this.products.filter(p => p.status === status).length; },
             
-            // --- VIP 與權限管理 ---
+            // --- VIP ---
             async fetchLevelConfigs() { const { data } = await supabaseClient.from('level_config').select('*').order('level_id'); this.levelConfigs = data || []; },
             async fetchAllShops() { const { data } = await supabaseClient.from('shops').select('*').order('created_at'); this.allShops = data || []; },
             async updateShopLevel(shop) { await supabaseClient.from('shops').update({ level: shop.level }).eq('shop_id', shop.shop_id); alert(`商家等級已更新為 Lv.${shop.level}`); },
             async saveLevelConfigs() { for (const config of this.levelConfigs) { await supabaseClient.from('level_config').upsert(config); } alert('權限設定已同步'); },
 
-            // --- 商品管理 ---
+            // --- 商品 ---
             goToCreateProduct() { this.resetForm(); this.isEditing = false; this.view = 'admin-create'; },
             async saveProduct() {
                 if (this.previewImages.length > this.currentLevelConfig.max_images) return alert(`Lv.${this.shopLevel} 限 ${this.currentLevelConfig.max_images} 張照片`);
@@ -335,7 +330,6 @@
                 endDate.setDate(endDate.getDate() + parseInt(this.newProduct.duration));
                 if(this.saveBankInfo) localStorage.setItem('savedBank', JSON.stringify(this.newProduct.bank));
 
-                // 修正：強制轉數字
                 const payload = {
                     shop_id: this.currentShopId,
                     name: this.newProduct.name, description: this.newProduct.description, images: this.newProduct.images,
@@ -366,17 +360,21 @@
                 else { alert(this.isEditing ? '更新成功' : '上架成功'); this.view = 'admin-home'; this.fetchProducts(); }
             },
             
-            async closeGroupBuying() {
-                if(!confirm('確定要立即結團嗎？')) return;
-                await supabaseClient.from('products').update({status: 'CLOSED'}).eq('product_id', this.editingProductId);
-                alert('已結團'); this.view = 'admin-home'; this.fetchProducts();
+            // --- 狀態控制 (關鍵修正) ---
+            updateStatus(pid, status) {
+                if(!confirm(`確定要變更為 ${status==='CLOSED'?'已結束':'已刪除'} 嗎？`)) return;
+                // 後端寫入
+                supabaseClient.from('products').update({status: status}).eq('product_id', pid).then(() => {
+                    this.fetchProducts(); // 重新整理列表
+                    if(this.isEditing) this.view = 'admin-home';
+                });
             },
 
-            // --- 輔助 ---
             checkAutoClose() {
                 this.products.forEach(p => {
                     if (p.status === 'OPEN' && p.end_time && new Date(p.end_time).getTime() < Date.now()) {
-                        p.status = 'CLOSED'; supabaseClient.from('products').update({status: 'CLOSED'}).eq('product_id', p.product_id);
+                        supabaseClient.from('products').update({status: 'CLOSED'}).eq('product_id', p.product_id);
+                        p.status = 'CLOSED';
                     }
                 });
             },
@@ -399,17 +397,14 @@
                     if(!error) {
                         const { data: { publicUrl } } = supabaseClient.storage.from('product-images').getPublicUrl(cleanFileName);
                         uploadedUrls.push(publicUrl);
-                    } else { alert('上傳失敗'); }
+                    }
                 }
                 this.previewImages = [...this.previewImages, ...uploadedUrls];
                 this.newProduct.images = this.previewImages.join('\n');
                 this.loading = false;
             },
-            addShippingRule(type) { 
-                if(!this.newProduct.shipping.some(s=>s.name===type)) this.newProduct.shipping.push({name: type, fee: null, limit: null}); 
-            },
+            addShippingRule(type) { if(!this.newProduct.shipping.some(s=>s.name===type)) this.newProduct.shipping.push({name: type, fee: null, limit: null}); },
             addVariant() { this.newProduct.variants.push({name:'', price:'', stock:''}); },
-            addQuestion() { this.newProduct.questions.push({ title: '', required: true }); },
             updateBankInfo() { this.newProduct.bank.name = this.selectedBankName; },
             
             editProduct(p) {
@@ -426,10 +421,6 @@
                 };
                 this.previewImages = p.images ? p.images.split('\n') : [];
                 this.view = 'admin-create';
-            },
-            updateStatus(pid, status) {
-                if(!confirm('確定刪除？')) return;
-                supabaseClient.from('products').update({status: status}).eq('product_id', pid).then(()=>this.fetchProducts());
             },
             resetForm() {
                 this.newProduct = { name:'', description:'', images:'', price:'', originalPrice:'', variants:[{name:'', price:'', stock:''}], shipping:[], duration:'7', targetAmount:'', bank:{name:'', account:''}, questions:[] };
@@ -450,10 +441,13 @@
                 else { alert('帳號或密碼錯誤'); }
             },
             
-            // 登出修正：正確對應
-            logout() { localStorage.removeItem('adminCreds'); this.view='shop'; },
+            // --- 修正後的登出 ---
+            logout() {
+                localStorage.removeItem('adminCreds');
+                this.view = 'shop';
+                alert('已登出');
+            },
             
-            // 買家登入 (模擬)
             loginBuyer() { alert('買家登入功能整合中...'); },
             logoutBuyer() { this.user = null; },
 
@@ -461,8 +455,7 @@
             goBack() { 
                 if(this.view === 'product') this.view = 'shop';
                 else if(this.view === 'cart') this.view = 'shop';
-                else if(this.view === 'admin-create' || this.view === 'admin-orders' || this.view === 'admin-vip') this.view = 'admin-home';
-                else if(this.view === 'admin-login') this.view = 'shop';
+                else if(this.view.includes('admin')) this.view = 'admin-home';
                 else this.view = 'shop';
             },
             addToCart() {
