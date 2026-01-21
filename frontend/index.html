@@ -13,7 +13,7 @@
     [v-cloak] { display: none; }
     body { background-color: #F8FAFC; font-family: 'Noto Sans TC', sans-serif; padding-bottom: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
     
-    /* === 極致 UI 系統 (紅色質感) === */
+    /* === UI 系統 === */
     .input-label { @apply block text-[13px] font-bold text-slate-500 mb-2 ml-1 tracking-wide; }
     .input-box { 
         @apply w-full h-[52px] border border-slate-200 rounded-2xl px-4 text-[16px] bg-white transition-all shadow-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none appearance-none text-slate-700; 
@@ -85,9 +85,13 @@
 
     <div v-if="view === 'shop'" class="p-4 pb-28 pt-4">
         <div class="mb-4 flex items-center justify-between">
-            <div><h1 class="text-2xl font-black text-slate-800">{{ shopName }}</h1><p class="text-xs text-slate-400 font-mono mt-1">Shop ID: {{ currentShopId }}</p></div>
+            <div>
+                <h1 class="text-2xl font-black text-slate-800">{{ shopName }}</h1>
+                <p class="text-xs text-slate-400 font-mono mt-1">Shop ID: {{ currentShopId }}</p>
+            </div>
             <div v-if="shopLevel>=99" class="bg-yellow-400 text-slate-900 text-xs px-2 py-1 rounded-lg font-bold shadow-sm">VIP 店家</div>
         </div>
+
         <div v-if="buyerProducts.length > 0" class="grid grid-cols-2 gap-3">
             <div v-for="p in buyerProducts" :key="p.product_id" @click="openProduct(p)" class="card !p-0 !mb-0 overflow-hidden active:scale-[0.98] transition cursor-pointer">
                 <div class="aspect-square bg-slate-100 relative"><img :src="p.images?.split('\n')[0]" class="w-full h-full object-cover"><div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full font-bold">{{ getCountdown(p.end_time) }}</div></div>
@@ -199,7 +203,7 @@
         <div class="w-full max-w-sm bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 relative z-10">
             <div class="text-center mb-6"><div class="w-16 h-16 bg-gradient-to-tr from-rose-500 to-orange-400 text-white rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-rose-200"><i class="fa-solid fa-store"></i></div><h1 class="text-2xl font-black text-slate-800 tracking-tight">{{ authMode === 'login' ? '商家後台登入' : (authMode === 'register' ? '註冊商家' : '重設密碼') }}</h1></div>
             <div v-if="authMode === 'login'" class="space-y-5"><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">Email</label><input v-model="loginForm.email" placeholder="name@example.com" class="input-box bg-slate-50 border-slate-100 focus:bg-white"></div><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">密碼</label><input v-model="loginForm.password" type="password" placeholder="••••••••" class="input-box bg-slate-50 border-slate-100 focus:bg-white"></div><button @click="adminLogin" class="btn-main shadow-rose-200 shadow-lg mt-2">登入 <i class="fa-solid fa-arrow-right ml-2"></i></button></div>
-            <div v-if="authMode === 'register'" class="space-y-4"><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">商店 ID (網址用)</label><input v-model="registerForm.shop_id" placeholder="例: myshop" class="input-box bg-slate-50 border-slate-100"></div><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">商店名稱</label><input v-model="registerForm.name" placeholder="例: 曉華團購" class="input-box bg-slate-50 border-slate-100"></div><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">Email</label><input v-model="registerForm.email" placeholder="name@example.com" class="input-box bg-slate-50 border-slate-100"></div><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">設定密碼</label><input v-model="registerForm.password" type="password" placeholder="6位數以上" class="input-box bg-slate-50 border-slate-100"></div><button @click="registerShop" class="btn-main shadow-rose-200 shadow-lg mt-2">立即開店</button></div>
+            <div v-if="authMode === 'register'" class="space-y-4"><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">商店 ID (網址用)</label><input v-model="registerForm.shop_id" placeholder="例: myshop (英文數字)" class="input-box bg-slate-50 border-slate-100"></div><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">商店名稱</label><input v-model="registerForm.name" placeholder="例: 曉華團購" class="input-box bg-slate-50 border-slate-100"></div><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">Email</label><input v-model="registerForm.email" placeholder="name@example.com" class="input-box bg-slate-50 border-slate-100"></div><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">設定密碼</label><input v-model="registerForm.password" type="password" placeholder="6位數以上" class="input-box bg-slate-50 border-slate-100"></div><button @click="registerShop" class="btn-main shadow-rose-200 shadow-lg mt-2">立即開店</button></div>
             <div v-if="authMode === 'reset'" class="space-y-5"><p class="text-xs text-slate-400 text-center mb-2">請輸入您的註冊 Email 與新密碼</p><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">Email</label><input v-model="resetForm.email" placeholder="name@example.com" class="input-box bg-slate-50 border-slate-100"></div><div><label class="block text-xs font-bold text-slate-500 mb-1 ml-1">新密碼</label><input v-model="resetForm.password" type="password" placeholder="••••••••" class="input-box bg-slate-50 border-slate-100"></div><button @click="resetPassword" class="btn-main shadow-rose-200 shadow-lg mt-2">確認重設</button></div>
             <div class="mt-6 flex justify-center gap-4 text-xs text-slate-400 font-bold"><span v-if="authMode !== 'login'" @click="authMode='login'" class="cursor-pointer hover:text-rose-500 transition">返回登入</span><span v-if="authMode === 'login'" @click="authMode='register'" class="cursor-pointer hover:text-rose-500 transition">註冊新商家</span><span v-if="authMode === 'login'" @click="authMode='reset'" class="cursor-pointer hover:text-rose-500 transition">忘記密碼?</span></div>
         </div>
@@ -314,7 +318,7 @@
             if(urlParams.get('mode') === 'admin') this.goToAdmin();
         },
         methods: {
-            // --- 核心修復：把 resetForm 確實補回來 ---
+            // --- 核心修復：把 resetForm 方法置於最上方，確保讀取 ---
             resetForm() {
                 this.newProduct = { 
                     name: '', description: '', images: '', price: '', originalPrice: '', stock: '', 
