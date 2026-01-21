@@ -13,22 +13,59 @@
     [v-cloak] { display: none; }
     body { background-color: #FFF1F2; font-family: 'Noto Sans TC', sans-serif; padding-bottom: 0; color: #4a044e; }
     
-    /* UI 元件優化 */
-    .input-field { @apply w-full border border-rose-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-500 transition bg-white; }
-    .btn-action { @apply w-full py-3.5 rounded-xl font-bold text-white shadow-lg shadow-rose-200 transition active:scale-95 text-center block bg-gradient-to-r from-rose-500 to-rose-600; }
-    .card-shadow { box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    /* === UI 優化核心樣式 === */
+    /* 1. 輸入框：預設有邊框，Focus時有光暈 */
+    .input-field { 
+        @apply w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm bg-white transition-all duration-300; 
+    }
+    .input-field:focus {
+        @apply border-rose-500 ring-4 ring-rose-100 outline-none;
+    }
+    .input-field:hover {
+        @apply border-rose-300;
+    }
+
+    /* 2. 按鈕：懸浮時上浮 + 陰影加深 */
+    .btn-action { 
+        @apply w-full py-3.5 rounded-xl font-bold text-white shadow-lg shadow-rose-200 transition-all duration-300 text-center block bg-gradient-to-r from-rose-500 to-rose-600 cursor-pointer; 
+    }
+    .btn-action:hover {
+        @apply shadow-xl shadow-rose-300 transform -translate-y-1 brightness-110;
+    }
+    .btn-action:active {
+        @apply scale-95;
+    }
+
+    /* 3. 卡片：懸浮時輕微上浮 */
+    .card-hover {
+        @apply transition-all duration-300 border border-transparent;
+    }
+    .card-hover:hover {
+        @apply shadow-lg transform -translate-y-1 border-rose-100 bg-white;
+    }
+
+    /* 後台 Grid Icon */
+    .grid-menu-item { 
+        @apply flex flex-col items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-rose-100 cursor-pointer transition-all duration-300; 
+    }
+    .grid-menu-item:hover {
+        @apply shadow-md border-rose-300 bg-rose-50 transform -translate-y-1;
+    }
     
-    /* 後台 Grid */
-    .grid-menu-item { @apply flex flex-col items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-rose-100 active:bg-rose-50 cursor-pointer transition hover:shadow-md; }
-    
-    /* 運費選項卡 */
-    .ship-btn { @apply border rounded-lg py-2 px-3 text-xs transition text-center cursor-pointer select-none; }
-    .ship-btn.active { @apply bg-rose-500 text-white border-rose-500 shadow-md transform scale-105; }
-    .ship-btn.inactive { @apply bg-white text-gray-500 border-gray-200 hover:border-rose-300; }
+    /* 運費標籤按鈕 */
+    .ship-tag { 
+        @apply border border-gray-300 bg-white text-gray-600 rounded-full py-2 px-4 text-xs font-bold transition-all duration-200 cursor-pointer select-none text-center hover:border-rose-400 hover:text-rose-500; 
+    }
+    .ship-tag:active { @apply scale-95; }
 
     /* VIP 徽章 */
     .vip-badge { @apply bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold ml-2 shadow-sm; }
     .free-badge { @apply bg-gray-400 text-white text-[10px] px-2 py-0.5 rounded-full font-bold ml-2; }
+
+    /* 垃圾桶按鈕特效 */
+    .btn-delete {
+        @apply text-gray-300 transition-colors duration-200 p-2 rounded-full hover:bg-red-50 hover:text-red-500 cursor-pointer;
+    }
   </style>
 </head>
 <body>
@@ -36,144 +73,189 @@
     
     <div v-if="loading" class="fixed inset-0 bg-white/80 z-[999] flex items-center justify-center flex-col backdrop-blur-sm">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-rose-600"></div>
-        <div class="mt-2 text-rose-600 font-bold">處理中...</div>
+        <div class="mt-2 text-rose-600 font-bold animate-pulse">處理中...</div>
     </div>
 
     <div class="bg-gradient-to-r from-rose-500 to-rose-600 pt-12 pb-6 px-6 text-white shadow-lg sticky top-0 z-50">
         <div class="flex justify-between items-center">
-            <h2 class="text-xl font-bold tracking-wide">{{ view === 'shop' ? '拍拍購 InsBuy' : '商家後台' }}</h2>
-            <button v-if="isAdminLoggedIn" @click="logout" class="text-xs bg-white/20 px-3 py-1 rounded-full">登出</button>
-            <button v-else-if="view==='shop'" @click="goToAdmin" class="text-xs bg-white/20 px-3 py-1 rounded-full">商家登入</button>
+            <h2 class="text-xl font-bold tracking-wide flex items-center gap-2">
+                <i v-if="view==='shop'" class="fa-solid fa-store"></i>
+                <i v-else class="fa-solid fa-user-gear"></i>
+                {{ view === 'shop' ? '拍拍購 InsBuy' : '商家後台' }}
+            </h2>
+            <button v-if="isAdminLoggedIn" @click="logout" class="text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/40 transition">登出</button>
+            <button v-else-if="view==='shop'" @click="goToAdmin" class="text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/40 transition">商家登入</button>
         </div>
     </div>
 
-    <div v-if="view === 'admin-home'" class="p-4 pb-24">
-        <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-rose-100 flex items-center justify-between">
+    <div v-if="view === 'admin-home'" class="p-4 pb-24 animate-fade-in">
+        <div class="bg-white p-5 rounded-2xl shadow-sm mb-4 border border-rose-100 flex items-center justify-between card-hover">
             <div class="flex items-center">
-                <div class="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center text-rose-500 text-xl font-bold mr-3">{{ shopName[0] }}</div>
+                <div class="w-14 h-14 bg-gradient-to-br from-rose-100 to-rose-200 rounded-full flex items-center justify-center text-rose-600 text-2xl font-bold mr-3 shadow-inner">{{ shopName[0] }}</div>
                 <div>
-                    <div class="font-bold text-gray-800 flex items-center">
+                    <div class="font-bold text-gray-800 flex items-center text-lg">
                         {{ shopName }}
-                        <span :class="shopLevel === 'vip' ? 'vip-badge' : 'free-badge'">{{ shopLevel === 'vip' ? 'VIP 商家' : '一般商家' }}</span>
+                        <span :class="shopLevel === 'vip' ? 'vip-badge' : 'free-badge'">{{ shopLevel === 'vip' ? 'VIP' : '一般' }}</span>
                     </div>
-                    <div class="text-xs text-gray-400 mt-1">ID: {{ currentShopId }}</div>
+                    <div class="text-xs text-gray-400 mt-1 font-mono bg-gray-100 px-2 py-0.5 rounded inline-block">ID: {{ currentShopId }}</div>
                 </div>
             </div>
-            <button v-if="shopLevel !== 'vip'" @click="alert('請聯繫客服升級 VIP 以解鎖更多功能！')" class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-bold">升級 VIP</button>
+            <button v-if="shopLevel !== 'vip'" @click="alert('請聯繫客服升級 VIP 以解鎖更多功能！')" class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-full font-bold hover:bg-yellow-200 transition">升級 VIP</button>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-            <div @click="view='admin-create'" class="grid-menu-item"><i class="fa-solid fa-plus text-2xl text-rose-500 mb-2"></i><span>新增團購</span></div>
-            <div @click="view='admin-orders'" class="grid-menu-item"><i class="fa-solid fa-clipboard-list text-2xl text-blue-500 mb-2"></i><span>訂單管理</span></div>
-            <div @click="view='admin-stats'" class="grid-menu-item"><i class="fa-solid fa-chart-pie text-2xl text-orange-500 mb-2"></i><span>我的報表</span></div>
-            <div @click="view='admin-coupons'" class="grid-menu-item"><i class="fa-solid fa-ticket text-2xl text-green-500 mb-2"></i><span>優惠券</span></div>
+            <div @click="view='admin-create'" class="grid-menu-item group">
+                <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center mb-2 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-300">
+                    <i class="fa-solid fa-plus text-xl text-rose-500 group-hover:text-white"></i>
+                </div>
+                <span class="font-bold text-gray-600 group-hover:text-rose-600">新增團購</span>
+            </div>
+            <div @click="view='admin-orders'" class="grid-menu-item group">
+                <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-2 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300">
+                    <i class="fa-solid fa-clipboard-list text-xl text-blue-500 group-hover:text-white"></i>
+                </div>
+                <span class="font-bold text-gray-600 group-hover:text-blue-600">訂單管理</span>
+            </div>
+            <div @click="view='admin-stats'" class="grid-menu-item group">
+                <div class="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center mb-2 group-hover:bg-orange-500 group-hover:text-white transition-colors duration-300">
+                    <i class="fa-solid fa-chart-pie text-xl text-orange-500 group-hover:text-white"></i>
+                </div>
+                <span class="font-bold text-gray-600 group-hover:text-orange-600">我的報表</span>
+            </div>
+            <div @click="view='admin-coupons'" class="grid-menu-item group">
+                <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-2 group-hover:bg-green-500 group-hover:text-white transition-colors duration-300">
+                    <i class="fa-solid fa-ticket text-xl text-green-500 group-hover:text-white"></i>
+                </div>
+                <span class="font-bold text-gray-600 group-hover:text-green-600">優惠券</span>
+            </div>
         </div>
     </div>
 
     <div v-if="view === 'admin-create'" class="p-4 pb-24 bg-gray-50 min-h-screen">
-        <div class="flex items-center mb-4">
-            <button @click="view='admin-home'" class="w-8 h-8 bg-white rounded-full shadow flex items-center justify-center mr-3"><i class="fa-solid fa-chevron-left"></i></button>
-            <h2 class="font-bold text-lg text-gray-800">新增團購商品</h2>
+        <div class="flex items-center mb-4 sticky top-[72px] z-40 bg-gray-50/90 backdrop-blur-sm py-2">
+            <button @click="view='admin-home'" class="w-9 h-9 bg-white rounded-full shadow flex items-center justify-center mr-3 hover:bg-gray-100 transition"><i class="fa-solid fa-chevron-left"></i></button>
+            <h2 class="font-bold text-lg text-gray-800">建立新團購</h2>
         </div>
 
-        <div class="space-y-5">
-            <div class="bg-white p-5 rounded-xl card-shadow">
-                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-2 mb-4">基本資訊</h3>
+        <div class="space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">基本資訊</h3>
                 
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-600 mb-2">商品名稱 <span class="text-red-500">*</span></label>
-                    <input v-model="newProduct.name" class="input-field text-lg" placeholder="請輸入商品名稱">
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">商品名稱 <span class="text-red-500">*</span></label>
+                    <input v-model="newProduct.name" class="input-field text-lg" placeholder="請輸入吸睛的商品標題">
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-600 mb-2">商品描述</label>
-                    <textarea v-model="newProduct.description" class="input-field h-32" placeholder="請輸入商品詳細介紹..."></textarea>
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">商品描述</label>
+                    <textarea v-model="newProduct.description" class="input-field h-32 resize-none" placeholder="商品特色、成分、注意事項..."></textarea>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-bold text-gray-600 mb-2">商品圖片 (可多選)</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">商品圖片</label>
                     <div class="flex flex-col gap-3">
-                        <label class="w-full bg-rose-50 border-2 border-dashed border-rose-300 text-rose-500 rounded-xl py-4 flex flex-col items-center justify-center cursor-pointer hover:bg-rose-100 transition">
-                            <i class="fa-solid fa-cloud-arrow-up text-2xl mb-1"></i> 
-                            <span class="text-xs font-bold">點擊上傳照片</span>
+                        <label class="w-full bg-gray-50 border-2 border-dashed border-gray-300 text-gray-400 rounded-xl py-6 flex flex-col items-center justify-center cursor-pointer hover:bg-rose-50 hover:border-rose-400 hover:text-rose-500 transition-all duration-300 group">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 group-hover:scale-110 transition-transform"></i> 
+                            <span class="text-sm font-bold">點擊上傳商品美照</span>
+                            <span class="text-xs mt-1">支援多選 (JPG, PNG)</span>
                             <input type="file" multiple accept="image/*" class="hidden" @change="handleFileUpload">
                         </label>
                         
-                        <div v-if="previewImages.length > 0" class="grid grid-cols-4 gap-2">
-                            <div v-for="(img, idx) in previewImages" :key="idx" class="relative aspect-square">
-                                <img :src="img" class="w-full h-full object-cover rounded-lg border border-gray-200">
-                                <button @click="removeImage(idx)" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm"><i class="fa-solid fa-times"></i></button>
+                        <div v-if="previewImages.length > 0" class="grid grid-cols-4 gap-3 mt-2">
+                            <div v-for="(img, idx) in previewImages" :key="idx" class="relative aspect-square group">
+                                <img :src="img" class="w-full h-full object-cover rounded-xl border border-gray-200 shadow-sm">
+                                <button @click="removeImage(idx)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md hover:bg-red-600 hover:scale-110 transition"><i class="fa-solid fa-times"></i></button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl card-shadow">
-                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-2 mb-4">價格設定</h3>
-                <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">價格設定</h3>
+                <div class="grid grid-cols-2 gap-5 mb-5">
                     <div>
-                        <label class="text-xs font-bold text-gray-500 mb-1 block">團購價 <span class="text-red-500">*</span></label>
-                        <input v-model="newProduct.price" type="number" class="input-field font-bold text-rose-600 text-lg">
+                        <label class="text-xs font-bold text-gray-500 mb-2 block">團購價 <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-3 text-gray-400">$</span>
+                            <input v-model="newProduct.price" type="number" class="input-field pl-7 font-bold text-rose-600 text-lg">
+                        </div>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-500 mb-1 block">原價</label>
-                        <input v-model="newProduct.originalPrice" type="number" class="input-field text-gray-400">
+                        <label class="text-xs font-bold text-gray-500 mb-2 block">原價</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-3 text-gray-400">$</span>
+                            <input v-model="newProduct.originalPrice" type="number" class="input-field pl-7 text-gray-400">
+                        </div>
                     </div>
                 </div>
                 
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <div class="flex justify-between items-center mb-3">
+                    <div class="flex justify-between items-center mb-4">
                         <span class="text-sm font-bold text-gray-700">規格列表</span>
-                        <button @click="addVariant" class="text-xs bg-rose-500 text-white px-3 py-1.5 rounded-lg shadow-sm">+ 新增</button>
+                        <button @click="addVariant" class="text-xs bg-rose-500 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-rose-600 hover:-translate-y-0.5 transition">+ 新增規格</button>
                     </div>
-                    <div v-for="(v, idx) in newProduct.variants" :key="idx" class="flex gap-2 mb-3 items-center">
-                        <input v-model="v.name" class="input-field h-10 text-xs" placeholder="規格 (如:紅色)">
-                        <input v-model="v.price" type="number" class="input-field h-10 text-xs w-20 text-center" placeholder="+加價">
-                        <input v-model="v.stock" type="number" class="input-field h-10 text-xs w-16 text-center" placeholder="庫存">
-                        <i @click="newProduct.variants.splice(idx,1)" class="fa-solid fa-trash text-gray-400 hover:text-red-500 p-2 cursor-pointer transition"></i>
+                    <div class="space-y-3">
+                        <div v-for="(v, idx) in newProduct.variants" :key="idx" class="flex gap-2 items-center group">
+                            <input v-model="v.name" class="input-field h-11 text-xs" placeholder="規格名 (如: 紅色)">
+                            <input v-model="v.price" type="number" class="input-field h-11 text-xs w-24 text-center" placeholder="+加價$">
+                            <input v-model="v.stock" type="number" class="input-field h-11 text-xs w-20 text-center" placeholder="庫存">
+                            <i @click="newProduct.variants.splice(idx,1)" class="fa-solid fa-trash btn-delete"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl card-shadow">
-                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-2 mb-4">運送設定</h3>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">運送設定</h3>
                 
-                <div class="grid grid-cols-3 gap-2 mb-4">
-                    <div v-for="type in shippingOptions" :key="type" 
-                         @click="toggleShipping(type)"
-                         class="ship-btn"
-                         :class="newProduct.shipping.some(s => s.name === type) ? 'active' : 'inactive'">
-                        {{ type }}
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-400 mb-2">點擊新增運送方式：</label>
+                    <div class="flex flex-wrap gap-2">
+                        <div v-for="type in shippingOptions" :key="type" 
+                             @click="addShippingRule(type)"
+                             class="ship-tag">
+                            <i class="fa-solid fa-plus mr-1"></i> {{ type }}
+                        </div>
                     </div>
                 </div>
 
                 <div v-if="newProduct.shipping.length > 0" class="space-y-3">
-                    <div v-for="(rule, idx) in newProduct.shipping" :key="idx" class="bg-rose-50 border border-rose-200 rounded-lg p-3 relative animate-fade-in">
-                        <div class="text-sm font-bold text-rose-700 mb-2 flex items-center">
-                            <i class="fa-solid fa-truck-fast mr-2"></i> {{ rule.name }}
+                    <div v-for="(rule, idx) in newProduct.shipping" :key="idx" class="bg-rose-50 border-2 border-rose-100 rounded-xl p-4 relative animate-fade-in hover:border-rose-300 transition">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="text-sm font-black text-rose-700 flex items-center">
+                                <span class="w-6 h-6 bg-rose-200 rounded-full flex items-center justify-center mr-2 text-rose-600 text-xs"><i class="fa-solid fa-truck"></i></span>
+                                {{ rule.name }}
+                            </div>
+                            <i @click="newProduct.shipping.splice(idx,1)" class="fa-solid fa-trash btn-delete"></i>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="text-[10px] text-gray-500 font-bold block mb-1">運費 ($)</label>
-                                <input v-model="rule.fee" type="number" class="bg-white border border-rose-200 rounded px-2 py-1 w-full text-sm">
+                                <label class="text-[10px] text-gray-500 font-bold block mb-1">運費金額 ($)</label>
+                                <input v-model="rule.fee" type="number" class="input-field h-10 text-sm">
                             </div>
                             <div>
-                                <label class="text-[10px] text-gray-500 font-bold block mb-1">每筆數量 (件)</label>
-                                <input v-model="rule.limit" type="number" class="bg-white border border-rose-200 rounded px-2 py-1 w-full text-sm" placeholder="例如: 10">
+                                <label class="text-[10px] text-gray-500 font-bold block mb-1">每筆數量限制 (件)</label>
+                                <input v-model="rule.limit" type="number" class="input-field h-10 text-sm" placeholder="如: 10">
                             </div>
                         </div>
-                        <div class="text-[10px] text-gray-400 mt-1">*每 {{ rule.limit || 1 }} 件算一筆運費</div>
+                        <div class="text-[10px] text-gray-400 mt-2 flex items-center">
+                            <i class="fa-solid fa-circle-info mr-1"></i>
+                            每 {{ rule.limit || 1 }} 件商品將計算一次運費 ${{ rule.fee }}
+                        </div>
                     </div>
+                </div>
+                <div v-else class="text-center py-6 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    尚未設定運送方式
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl card-shadow">
-                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-2 mb-4">開團設定</h3>
-                <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">開團設定</h3>
+                <div class="grid grid-cols-2 gap-5">
                     <div>
-                        <label class="text-xs font-bold text-gray-500 mb-1 block">開團天數</label>
-                        <select v-model="newProduct.duration" class="input-field h-11 bg-white">
+                        <label class="text-xs font-bold text-gray-500 mb-2 block">開團天數</label>
+                        <select v-model="newProduct.duration" class="input-field h-12 bg-white cursor-pointer">
                             <option value="1">1 天 (快閃)</option>
                             <option value="3">3 天</option>
                             <option value="5">5 天</option>
@@ -183,39 +265,46 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-500 mb-1 block">目標金額 (選填)</label>
-                        <input v-model="newProduct.targetAmount" type="number" class="input-field h-11" placeholder="$">
+                        <label class="text-xs font-bold text-gray-500 mb-2 block">目標金額 (選填)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-3.5 text-gray-400">$</span>
+                            <input v-model="newProduct.targetAmount" type="number" class="input-field h-12 pl-7" placeholder="0">
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white p-5 rounded-xl card-shadow">
-                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-2 mb-4">收款帳戶</h3>
-                <div class="mb-3">
-                    <select v-model="selectedBankName" @change="updateBankInfo" class="input-field mb-2 bg-white">
-                        <option value="" disabled>選擇銀行</option>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">收款帳戶</h3>
+                <div class="mb-4">
+                    <select v-model="selectedBankName" @change="updateBankInfo" class="input-field mb-3 bg-white cursor-pointer">
+                        <option value="" disabled>請選擇收款銀行</option>
                         <option v-for="b in commonBanks" :value="b">{{ b }}</option>
                     </select>
-                    <input v-model="newProduct.bank.account" class="input-field font-mono text-lg tracking-widest bg-gray-50" placeholder="輸入銀行帳號">
+                    <input v-model="newProduct.bank.account" class="input-field font-mono text-lg tracking-widest bg-gray-50 border-dashed" placeholder="輸入銀行帳號">
                 </div>
-                <label class="flex items-center text-xs text-gray-500">
-                    <input type="checkbox" v-model="saveBankInfo" class="mr-1 accent-rose-500"> 記住此帳號，下次自動帶入
+                <label class="flex items-center text-xs text-gray-500 cursor-pointer hover:text-rose-500 transition">
+                    <input type="checkbox" v-model="saveBankInfo" class="mr-2 w-4 h-4 accent-rose-500"> 記住此帳號，下次自動帶入
                 </label>
             </div>
 
-            <div class="bg-white p-5 rounded-xl card-shadow">
-                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-2 mb-4">賣家提問</h3>
-                <div v-for="(q, idx) in newProduct.questions" :key="idx" class="flex gap-2 mb-2 items-center bg-gray-50 p-2 rounded border border-gray-100">
-                    <input v-model="q.title" class="input-field h-9 text-sm" placeholder="問題 (例: 您的 Line ID)">
-                    <label class="flex items-center text-xs whitespace-nowrap px-2">
-                        <input type="checkbox" v-model="q.required" class="mr-1 accent-rose-500"> 必填
-                    </label>
-                    <i @click="newProduct.questions.splice(idx,1)" class="fa-solid fa-times text-gray-400 p-2 cursor-pointer"></i>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-hover">
+                <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">賣家提問</h3>
+                <div class="space-y-3 mb-3">
+                    <div v-for="(q, idx) in newProduct.questions" :key="idx" class="flex gap-2 items-center bg-gray-50 p-3 rounded-xl border border-gray-100 group">
+                        <input v-model="q.title" class="input-field h-10 text-sm border-gray-200" placeholder="問題 (例: 您的 Line ID)">
+                        <label class="flex items-center text-xs whitespace-nowrap px-2 cursor-pointer select-none">
+                            <input type="checkbox" v-model="q.required" class="mr-1 accent-rose-500"> 必填
+                        </label>
+                        <i @click="newProduct.questions.splice(idx,1)" class="fa-solid fa-trash btn-delete"></i>
+                    </div>
                 </div>
-                <button @click="addQuestion" class="w-full border border-dashed border-rose-300 text-rose-500 py-3 rounded-xl text-sm font-bold mt-2 hover:bg-rose-50 transition">+ 新增問題</button>
+                <button @click="addQuestion" class="w-full border-2 border-dashed border-rose-300 text-rose-500 py-3 rounded-xl text-sm font-bold hover:bg-rose-50 hover:border-rose-400 transition-all">+ 新增問題</button>
             </div>
 
-            <button @click="saveProduct" class="btn-action shadow-xl text-lg tracking-wide mt-8 mb-8">確認上架發布</button>
+            <button @click="saveProduct" class="btn-action shadow-xl text-lg tracking-wide mt-8 mb-12 transform hover:scale-105 transition-all">
+                <i class="fa-solid fa-paper-plane mr-2"></i> 確認上架發布
+            </button>
         </div>
     </div>
 
@@ -225,21 +314,36 @@
             <input v-model="loginForm.email" placeholder="Email" class="input-field">
             <input v-model="loginForm.password" type="password" placeholder="Password" class="input-field">
             <button @click="adminLogin" class="btn-action">登入後台</button>
-            <button @click="view='shop'" class="w-full text-center text-sm text-gray-400 mt-4">返回前台</button>
+            <button @click="view='shop'" class="w-full text-center text-sm text-gray-400 mt-4 hover:text-rose-500 cursor-pointer">返回前台</button>
         </div>
     </div>
     
     <div v-if="view === 'shop'" class="p-4 pb-28 pt-4">
         <div v-if="products.length > 0" class="grid grid-cols-2 gap-4">
-            <div v-for="p in products" :key="p.product_id" @click="openProduct(p)" class="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer">
-                <img :src="p.images?.split('\n')[0]" class="w-full aspect-[3/4] object-cover">
-                <div class="p-3"><div class="font-bold line-clamp-1">{{ p.name }}</div><div class="text-rose-600 font-bold mt-1">$ {{ p.price }}</div></div>
+            <div v-for="p in products" :key="p.product_id" @click="openProduct(p)" class="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer card-hover border border-gray-100">
+                <div class="aspect-[4/5] bg-gray-100 relative">
+                     <img :src="p.images?.split('\n')[0]" class="w-full h-full object-cover">
+                     <div v-if="p.total_stock < 10" class="absolute bottom-2 left-2 bg-rose-600/90 text-white text-[10px] px-2 py-1 rounded shadow-sm backdrop-blur-sm">剩 {{ p.total_stock }} 組</div>
+                </div>
+                <div class="p-3">
+                    <div class="font-bold text-gray-800 line-clamp-1 mb-1">{{ p.name }}</div>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-xs text-gray-400 line-through mr-1">${{ p.original_price }}</span>
+                            <span class="text-rose-600 font-bold text-lg">${{ p.price }}</span>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 hover:bg-rose-500 hover:text-white transition"><i class="fa-solid fa-cart-plus text-sm"></i></button>
+                    </div>
+                </div>
             </div>
         </div>
-        <div v-else class="text-center py-20 text-gray-400">尚無商品</div>
+        <div v-else class="text-center py-20 text-gray-400">
+            <i class="fa-solid fa-box-open text-4xl mb-3 text-gray-200"></i>
+            <p>尚無商品</p>
+        </div>
     </div>
     
-    <div v-if="view !== 'product' && view !== 'admin-create'" class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around py-2 pb-6 z-40 max-w-md mx-auto">
+    <div v-if="view !== 'product' && view !== 'admin-create'" class="fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-gray-200 flex justify-around py-2 pb-6 z-40 max-w-md mx-auto shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="bottom-nav-item" :class="{active: view==='shop'}" @click="view='shop'"><i class="fa-solid fa-house"></i><span>首頁</span></div>
         <div class="bottom-nav-item" :class="{active: view==='orders'}" @click="fetchMyOrders(); view='orders'"><i class="fa-solid fa-file-invoice"></i><span>訂單</span></div>
         <div class="bottom-nav-item" :class="{active: view.includes('admin')}" @click="goToAdmin"><i class="fa-solid fa-user-gear"></i><span>後台</span></div>
@@ -249,7 +353,7 @@
 
   <script>
     // ============================================
-    // ⚠️ 設定區 (自動填入)
+    // ⚠️ 設定區
     // ============================================
     const API_BASE = 'https://insbuy-project.onrender.com/api'; 
     const SUPABASE_URL = 'https://robgmhyjdfizzxdddqzr.supabase.co';
@@ -267,7 +371,7 @@
                 currentShopId: 'S001',
                 shopName: 'INSBUY',
                 shopLogo: '',
-                shopLevel: 'free', // 預設等級
+                shopLevel: 'free',
                 products: [],
                 cart: [],
                 loginForm: { email: '', password: '' },
@@ -302,38 +406,25 @@
         methods: {
             async fetchShopInfo() {
                 const { data } = await supabaseClient.from('shops').select('*').eq('shop_id', this.currentShopId).single();
-                if(data) { 
-                    this.shopName = data.name; 
-                    this.shopLogo = data.logo_url;
-                    this.shopLevel = data.level || 'free'; // 取得 VIP 狀態
-                }
+                if(data) { this.shopName = data.name; this.shopLogo = data.logo_url; this.shopLevel = data.level || 'free'; }
             },
             async fetchProducts() { const { data } = await supabaseClient.from('products').select('*').eq('status', 'OPEN'); this.products = data || []; },
 
-            // --- 核心修正：圖片上傳與重命名 ---
             async handleFileUpload(event) {
                 const files = event.target.files;
                 if(!files.length) return;
-                
                 this.loading = true;
                 const uploadedUrls = [];
-
                 for(let file of files) {
-                    // ⚠️ 關鍵修正：將檔名改為純數字 Timestamp，避免中文檔名導致 Header 錯誤
                     const fileExt = file.name.split('.').pop();
                     const cleanFileName = `products/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-                    
                     const { data, error } = await supabaseClient.storage.from('product-images').upload(cleanFileName, file);
-                    
-                    if(error) {
-                        console.error('Upload fail:', error);
-                        alert('圖片上傳失敗，請確認已執行 SQL 建立 bucket。\n錯誤訊息: ' + error.message);
-                    } else {
+                    if(error) { console.error('Upload fail:', error); alert('圖片上傳失敗：' + error.message); } 
+                    else {
                         const { data: { publicUrl } } = supabaseClient.storage.from('product-images').getPublicUrl(cleanFileName);
                         uploadedUrls.push(publicUrl);
                     }
                 }
-                
                 if(uploadedUrls.length > 0) {
                     const currentImgs = this.newProduct.images ? this.newProduct.images + '\n' : '';
                     this.newProduct.images = currentImgs + uploadedUrls.join('\n');
@@ -344,21 +435,20 @@
             
             removeImage(idx) {
                 this.previewImages.splice(idx, 1);
-                // 同步更新字串
                 this.newProduct.images = this.previewImages.join('\n');
             },
 
-            // --- 商品上架邏輯 ---
             async saveProduct() {
                 if(!this.newProduct.name || !this.newProduct.price) return alert('商品名稱與價格為必填');
-                
                 this.loading = true;
                 const endDate = new Date();
                 endDate.setDate(endDate.getDate() + parseInt(this.newProduct.duration));
 
                 if(this.saveBankInfo) localStorage.setItem('savedBank', JSON.stringify(this.newProduct.bank));
 
+                // ⚠️ 解決 Null ID 錯誤：前端生成 UUID
                 const payload = {
+                    product_id: crypto.randomUUID(), // 強制生成 ID
                     shop_id: this.currentShopId,
                     name: this.newProduct.name,
                     description: this.newProduct.description,
@@ -387,19 +477,17 @@
                 }
             },
 
-            // 輔助功能
             addVariant() { this.newProduct.variants.push({name:'', price:'', stock:''}); },
-            toggleShipping(method) {
-                if(this.newProduct.shipping.some(s=>s.name===method)) {
-                    this.newProduct.shipping = this.newProduct.shipping.filter(s=>s.name!==method);
-                } else {
-                    this.newProduct.shipping.push({name: method, fee: 60, limit: 1});
+            
+            // 運送方式：新增 (不重複)
+            addShippingRule(type) {
+                if(!this.newProduct.shipping.some(s=>s.name===type)) {
+                    this.newProduct.shipping.push({name: type, fee: 60, limit: 1});
                 }
             },
             addQuestion() { this.newProduct.questions.push({ title: '', required: true }); },
             updateBankInfo() { this.newProduct.bank.name = this.selectedBankName; },
             
-            // 登入登出
             goToAdmin() { const creds = localStorage.getItem('adminCreds'); this.view = creds ? 'admin-home' : 'admin-login'; },
             async adminLogin() {
                 this.loading = true;
@@ -409,7 +497,7 @@
                 else { alert('帳號密碼錯誤'); }
             },
             logout() { localStorage.removeItem('adminCreds'); this.view='shop'; },
-            openProduct(p) { alert('此為預覽模式，詳細頁面請參照上方邏輯'); }
+            openProduct(p) { alert('預覽模式'); }
         }
     }).mount('#app');
   </script>
