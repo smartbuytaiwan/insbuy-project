@@ -14,32 +14,30 @@
     body { background-color: #FFF1F2; font-family: 'Noto Sans TC', sans-serif; padding-bottom: 0; color: #4a044e; }
     
     /* === UI 優化 === */
-    /* 輸入框全寬且對齊優化 */
-    .input-field { 
-        @apply w-full h-12 border-2 border-gray-200 rounded-xl px-4 text-base bg-white transition-all duration-300 text-gray-700 flex items-center focus:border-rose-500 focus:ring-4 focus:ring-rose-100 outline-none hover:border-rose-300; 
-    }
-    textarea.input-field {
-        @apply h-32 py-3 leading-relaxed items-start resize-none;
-    }
+    .input-field { @apply w-full h-12 border-2 border-gray-200 rounded-xl px-4 text-base bg-white transition-all duration-300 text-gray-700 flex items-center focus:border-rose-500 focus:ring-4 focus:ring-rose-100 outline-none hover:border-rose-300; }
+    textarea.input-field { @apply h-32 py-3 leading-relaxed items-start resize-none; }
     
-    /* 錢號對齊修正 */
-    .money-input-wrapper { @apply relative w-full; }
-    .money-symbol { @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-bold z-10; }
-    .money-input { @apply pl-7 font-bold text-lg text-rose-600; }
+    /* 錢號對齊修正 (完美版) */
+    .money-wrapper { @apply relative w-full flex items-center; }
+    .money-symbol { @apply absolute left-4 text-gray-400 font-bold z-10 select-none; }
+    .money-input { @apply pl-8 font-bold text-lg text-rose-600; }
 
     .btn-action { @apply w-full h-14 rounded-xl font-bold text-white shadow-lg shadow-rose-200 transition-all duration-300 text-center flex items-center justify-center text-lg bg-gradient-to-r from-rose-500 to-rose-600 cursor-pointer active:scale-95 hover:shadow-xl hover:-translate-y-1; }
     .card-hover { @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-white border border-transparent hover:border-rose-100; }
     .grid-menu-item { @apply flex flex-col items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-rose-100 cursor-pointer transition-all duration-300 hover:bg-rose-50 hover:-translate-y-1; }
     .ship-tag { @apply border border-gray-300 bg-white text-gray-600 rounded-full py-2 px-4 text-sm font-bold transition-all cursor-pointer hover:border-rose-400 hover:text-rose-500 active:scale-95; }
     
-    /* VIP 標章 */
+    /* 頁籤 Tab */
+    .tab-btn { @apply flex-1 text-center py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent transition-all cursor-pointer; }
+    .tab-btn.active { @apply text-rose-600 border-rose-600; }
+
+    /* VIP & 倒數 */
     .vip-badge { @apply bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold ml-2 shadow-sm; }
     .free-badge { @apply bg-gray-400 text-white text-[10px] px-2 py-0.5 rounded-full font-bold ml-2; }
+    .timer-badge { @apply bg-rose-600 text-white text-xs px-2 py-1 rounded flex items-center gap-1 font-mono; }
 
     .btn-delete { @apply text-gray-300 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 hover:text-red-500 cursor-pointer transition; }
     .safe-pb { padding-bottom: calc(env(safe-area-inset-bottom) + 80px); }
-    
-    /* 返回按鈕 (防止被遮擋) */
     .back-btn { @apply absolute top-4 left-4 z-50 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center backdrop-blur-md shadow-lg active:scale-90 transition; }
   </style>
 </head>
@@ -92,29 +90,75 @@
                 <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-2 group-hover:bg-blue-500 group-hover:text-white transition"><i class="fa-solid fa-clipboard-list text-xl text-blue-500 group-hover:text-white"></i></div>
                 <span class="font-bold text-gray-600">訂單管理</span>
             </div>
+            <div @click="view='admin-stats'" class="grid-menu-item group">
+                <div class="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center mb-2 group-hover:bg-orange-500 group-hover:text-white transition"><i class="fa-solid fa-chart-pie text-xl text-orange-500 group-hover:text-white"></i></div>
+                <span class="font-bold text-gray-600">我的報表</span>
+            </div>
+            <div @click="view='admin-coupons'" class="grid-menu-item group">
+                <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-2 group-hover:bg-green-500 group-hover:text-white transition"><i class="fa-solid fa-ticket text-xl text-green-500 group-hover:text-white"></i></div>
+                <span class="font-bold text-gray-600">優惠券</span>
+            </div>
         </div>
 
-        <h3 class="font-bold text-gray-700 mb-3 pl-1 border-l-4 border-rose-500">上架中商品管理</h3>
-        <div v-if="products.length > 0" class="space-y-3">
-            <div v-for="p in products" :key="p.product_id" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3">
+        <h3 class="font-bold text-gray-700 mb-2 pl-1 border-l-4 border-rose-500">商品管理</h3>
+        <div class="flex bg-white rounded-t-xl border-b border-gray-100 mb-2">
+            <div class="tab-btn" :class="{active: adminTab==='OPEN'}" @click="adminTab='OPEN'">團購中</div>
+            <div class="tab-btn" :class="{active: adminTab==='CLOSED'}" @click="adminTab='CLOSED'">已結束</div>
+            <div class="tab-btn" :class="{active: adminTab==='DELETED'}" @click="adminTab='DELETED'">已刪除</div>
+        </div>
+
+        <div v-if="filteredAdminProducts.length > 0" class="space-y-3">
+            <div v-for="p in filteredAdminProducts" :key="p.product_id" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3">
                 <img :src="p.images?.split('\n')[0]" class="w-16 h-16 rounded-lg object-cover bg-gray-100">
                 <div class="flex-1">
                     <div class="font-bold text-gray-800 line-clamp-1">{{ p.name }}</div>
-                    <div class="text-xs text-gray-500 mt-1">庫存: {{ p.total_stock }} | 已售: 0</div>
+                    <div class="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                        <span>${{p.price}}</span>
+                        <span v-if="adminTab==='OPEN'" class="text-rose-500 font-mono"><i class="fa-regular fa-clock"></i> {{ getCountdown(p.end_time) }}</span>
+                    </div>
                 </div>
-                <div class="flex flex-col gap-2 justify-center">
+                <div class="flex flex-col gap-2 justify-center" v-if="adminTab!=='DELETED'">
                     <button @click="editProduct(p)" class="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-lg font-bold">編輯</button>
-                    <button @click="deleteProduct(p.product_id)" class="text-xs bg-red-50 text-red-600 px-3 py-1 rounded-lg font-bold">下架</button>
+                    <button v-if="adminTab==='OPEN'" @click="updateStatus(p.product_id, 'CLOSED')" class="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-lg font-bold">結團</button>
+                    <button @click="updateStatus(p.product_id, 'DELETED')" class="text-xs bg-red-50 text-red-600 px-3 py-1 rounded-lg font-bold">刪除</button>
                 </div>
             </div>
         </div>
-        <div v-else class="text-center text-gray-400 py-10 bg-gray-50 rounded-xl">目前沒有上架商品</div>
+        <div v-else class="text-center text-gray-400 py-10 bg-gray-50 rounded-xl">此分類尚無商品</div>
+    </div>
+
+    <div v-if="view === 'admin-stats'" class="p-4 pb-28">
+        <div class="flex items-center mb-4"><button @click="view='admin-home'" class="w-8 h-8 bg-white rounded-full shadow flex items-center justify-center mr-3"><i class="fa-solid fa-chevron-left"></i></button><h2 class="font-bold text-lg">我的報表</h2></div>
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-4">
+            <div class="bg-[#ED6C02] text-white text-center py-2 font-bold text-sm">銷售總覽</div>
+            <div class="p-4 grid grid-cols-3 gap-y-6 text-center">
+                <div><div class="text-xl font-bold text-[#ED6C02]">{{ stats.newOrders }}</div><div class="text-xs text-gray-500">新訂單</div></div>
+                <div><div class="text-xl font-bold text-[#ED6C02]">{{ stats.shipped }}</div><div class="text-xs text-gray-500">已出貨</div></div>
+                <div><div class="text-xl font-bold text-[#ED6C02]">${{ formatNumber(stats.monthlySales) }}</div><div class="text-xs text-gray-500">營收</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="view === 'admin-coupons'" class="p-4 pb-28">
+        <div class="flex items-center mb-4"><button @click="view='admin-home'" class="w-8 h-8 bg-white rounded-full shadow flex items-center justify-center mr-3"><i class="fa-solid fa-chevron-left"></i></button><h2 class="font-bold text-lg">優惠券管理</h2></div>
+        <div class="bg-white p-5 rounded-xl shadow-sm mb-4">
+            <h3 class="font-bold mb-3 text-gray-700">建立新優惠券</h3>
+            <input v-model="newCoupon.code" placeholder="優惠碼 (例如: VIP888)" class="input-field mb-3 uppercase">
+            <input v-model="newCoupon.discount" type="number" placeholder="折扣金額 ($)" class="input-field mb-4">
+            <button @click="createCoupon" class="btn-action">建立優惠券</button>
+        </div>
+        <div class="space-y-3">
+             <div v-for="c in couponList" :key="c.id" class="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center">
+                 <div><div class="font-bold text-rose-600">{{ c.code }}</div><div class="text-xs text-gray-500">折抵 ${{ c.discount_amount }}</div></div>
+                 <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">進行中</span>
+             </div>
+        </div>
     </div>
 
     <div v-if="view === 'admin-create'" class="p-4 pb-24 bg-gray-50 min-h-screen">
         <div class="flex items-center mb-4 sticky top-[72px] z-30 bg-gray-50/95 backdrop-blur py-2 border-b border-gray-200/50">
             <button @click="view='admin-home'" class="w-9 h-9 bg-white rounded-full shadow flex items-center justify-center mr-3"><i class="fa-solid fa-chevron-left"></i></button>
-            <h2 class="font-bold text-lg text-gray-800">{{ isEditing ? '編輯商品 (VIP)' : '建立新團購' }}</h2>
+            <h2 class="font-bold text-lg text-gray-800">{{ isEditing ? '編輯商品' : '建立新團購' }}</h2>
         </div>
 
         <div class="space-y-6">
@@ -132,8 +176,7 @@
                     <label class="block text-sm font-bold text-gray-700 mb-2">商品圖片 <span class="text-xs font-normal text-gray-400">(限制: {{shopLevel>=99 ? '無' : '3張'}})</span></label>
                     <div class="flex flex-col gap-3">
                         <label class="w-full bg-gray-50 border-2 border-dashed border-gray-300 text-gray-400 rounded-xl py-4 flex items-center justify-center cursor-pointer hover:border-rose-400 hover:text-rose-500 transition group">
-                            <i class="fa-solid fa-camera text-xl mr-2"></i> 
-                            <span class="text-sm font-bold">新增照片</span>
+                            <i class="fa-solid fa-camera text-xl mr-2"></i> <span class="text-sm font-bold">新增照片</span>
                             <input type="file" multiple accept="image/*" class="hidden" @change="handleFileUpload">
                         </label>
                         <div v-if="previewImages.length > 0" class="grid grid-cols-2 gap-3 mt-2">
@@ -151,14 +194,14 @@
                 <div class="grid grid-cols-2 gap-5 mb-5">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-2">團購價 <span class="text-red-500">*</span></label>
-                        <div class="money-input-wrapper">
+                        <div class="money-wrapper">
                             <span class="money-symbol">$</span>
                             <input v-model="newProduct.price" type="number" class="input-field money-input">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-2">原價</label>
-                        <div class="money-input-wrapper">
+                        <div class="money-wrapper">
                             <span class="money-symbol">$</span>
                             <input v-model="newProduct.originalPrice" type="number" class="input-field money-input !text-gray-400">
                         </div>
@@ -196,7 +239,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-2">目標金額</label>
-                        <div class="money-input-wrapper">
+                        <div class="money-wrapper">
                             <span class="money-symbol">$</span>
                             <input v-model="newProduct.targetAmount" type="number" class="input-field money-input !text-gray-600" placeholder="0">
                         </div>
@@ -226,6 +269,9 @@
             <div v-for="p in products" :key="p.product_id" @click="openProduct(p)" class="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer card-hover border border-gray-100">
                 <div class="aspect-[4/5] bg-gray-100 relative">
                      <img :src="p.images?.split('\n')[0]" class="w-full h-full object-cover">
+                     <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full font-mono flex items-center gap-1">
+                         <i class="fa-regular fa-clock"></i> {{ getCountdown(p.end_time) }}
+                     </div>
                      <div v-if="p.total_stock < 10" class="absolute bottom-2 left-2 bg-rose-600/90 text-white text-[10px] px-2 py-1 rounded shadow-sm backdrop-blur-sm">剩 {{ p.total_stock }} 組</div>
                 </div>
                 <div class="p-3">
@@ -237,14 +283,19 @@
                 </div>
             </div>
         </div>
-        <div v-else class="text-center py-20 text-gray-400">尚無商品</div>
+        <div v-else class="text-center py-20 text-gray-400">尚無進行中的團購</div>
     </div>
 
     <div v-if="view === 'product' && selectedProduct" class="bg-white min-h-screen pb-32 relative">
         <button @click="view='shop'" class="back-btn"><i class="fa-solid fa-arrow-left"></i></button>
         <img :src="selectedProduct.images?.split('\n')[0]" class="w-full h-[400px] object-cover bg-gray-100">
         
-        <div class="p-5 -mt-6 bg-white rounded-t-3xl relative z-10">
+        <div class="bg-rose-600 text-white px-4 py-2 flex justify-between items-center text-sm font-bold">
+            <span><i class="fa-solid fa-fire mr-1"></i> 限時團購中</span>
+            <span class="font-mono text-base">{{ getCountdown(selectedProduct.end_time) }}</span>
+        </div>
+
+        <div class="p-5 bg-white relative z-10">
              <h1 class="text-2xl font-black text-gray-800 mb-2 leading-tight">{{ selectedProduct.name }}</h1>
              <div class="text-gray-500 text-sm mb-6 leading-relaxed whitespace-pre-line">{{ selectedProduct.description }}</div>
              
@@ -333,59 +384,80 @@
                 currentShopId: 'S001',
                 shopName: 'INSBUY',
                 shopLogo: '',
-                shopLevel: 1, // 預設 1 (一般), 99 (VIP)
+                shopLevel: 1, 
                 products: [],
                 cart: [],
                 loginForm: { email: '', password: '' },
                 // 商品表單
                 isEditing: false,
                 editingProductId: null,
-                newProduct: {
-                    name: '', description: '', images: '', price: '', originalPrice: '',
-                    variants: [{name:'', price:'', stock:''}], 
-                    shipping: [], 
-                    duration: '7', targetAmount: '',
-                    bank: { name: '', account: '' },
-                    questions: []
-                },
+                newProduct: { name: '', description: '', images: '', price: '', originalPrice: '', variants: [{name:'', price:'', stock:''}], shipping: [], duration: '7', targetAmount: '', bank: { name: '', account: '' }, questions: [] },
                 selectedProduct: null,
                 orderForm: { variant: '', qty: 1 },
                 previewImages: [],
-                shippingOptions: ['7-11', '全家', '宅配', '面交']
+                shippingOptions: ['7-11', '全家', '宅配', '面交'],
+                // 後台管理
+                adminTab: 'OPEN', // OPEN, CLOSED, DELETED
+                now: Date.now(),
+                // 統計與優惠券
+                stats: { newOrders: 0, shipped: 0, monthlySales: 0 },
+                newCoupon: { code: '', discount: '' },
+                couponList: []
             }
         },
         computed: {
             isAdminLoggedIn() { return !!localStorage.getItem('adminCreds'); },
-            cartTotal() { return this.cart.reduce((sum, i) => sum + i.finalPrice * i.qty, 0); }
+            cartTotal() { return this.cart.reduce((sum, i) => sum + i.finalPrice * i.qty, 0); },
+            // 後台商品篩選
+            filteredAdminProducts() {
+                if(!this.products) return [];
+                return this.products.filter(p => p.status === this.adminTab);
+            }
         },
         async mounted() {
             this.loading = true;
+            setInterval(() => { this.now = Date.now(); }, 1000); // 啟動倒數計時器
             await this.fetchShopInfo();
-            await this.fetchProducts();
+            await this.fetchProducts(); // 抓取所有狀態商品，前端過濾
             this.loading = false;
             if(new URLSearchParams(window.location.search).get('mode') === 'admin') this.goToAdmin();
         },
         methods: {
+            formatNumber(num) { return (num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); },
+            // 倒數計時邏輯
+            getCountdown(endTimeStr) {
+                if(!endTimeStr) return '無期限';
+                const end = new Date(endTimeStr).getTime();
+                const diff = end - this.now;
+                if(diff <= 0) return '已結束';
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                return `${d}天 ${h}時${m}分`;
+            },
+
             async fetchShopInfo() {
                 const { data } = await supabaseClient.from('shops').select('*').eq('shop_id', this.currentShopId).single();
-                if(data) { 
-                    this.shopName = data.name; 
-                    this.shopLevel = parseInt(data.level) || 1; // 轉為數字
-                }
+                if(data) { this.shopName = data.name; this.shopLevel = parseInt(data.level) || 1; }
             },
-            async fetchProducts() { const { data } = await supabaseClient.from('products').select('*').eq('status', 'OPEN'); this.products = data || []; },
+            // 修改 fetchProducts 抓取全部商品 (以便後台分類)
+            async fetchProducts() { 
+                const { data } = await supabaseClient.from('products').select('*').neq('status', 'ARCHIVED'); // 只過濾掉封存的
+                this.products = data || []; 
+                this.products.forEach(p => { if(typeof p.variants === 'string') p.variants = JSON.parse(p.variants); });
+            },
 
-            // --- VIP 權限控制 ---
-            goToCreateProduct() {
-                this.resetForm();
-                this.isEditing = false;
-                this.view = 'admin-create';
+            // --- 後台管理 ---
+            async updateStatus(pid, status) {
+                if(!confirm('確定要變更狀態嗎？')) return;
+                await supabaseClient.from('products').update({status: status}).eq('product_id', pid);
+                this.fetchProducts();
             },
+            goToCreateProduct() { this.resetForm(); this.isEditing = false; this.view = 'admin-create'; },
             editProduct(p) {
-                if(this.shopLevel < 99) return window.alert('僅 VIP 會員可編輯已上架商品！');
+                if(this.shopLevel < 99 && p.status !== 'OPEN') return window.alert('一般會員不可編輯已結束商品');
                 this.isEditing = true;
                 this.editingProductId = p.product_id;
-                // 載入資料
                 this.newProduct = {
                     name: p.name, description: p.description, images: p.images, price: p.price, originalPrice: p.original_price,
                     variants: typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants,
@@ -397,27 +469,16 @@
                 this.previewImages = p.images ? p.images.split('\n') : [];
                 this.view = 'admin-create';
             },
-            async deleteProduct(pid) {
-                if(this.shopLevel < 99) return window.alert('僅 VIP 會員可下架商品！');
-                if(!confirm('確定要下架此商品嗎？')) return;
-                await supabaseClient.from('products').update({status: 'CLOSED'}).eq('product_id', pid);
-                this.fetchProducts();
-            },
 
-            // --- 圖片上傳 (VIP 限制數量) ---
+            // --- 圖片上傳 ---
             async handleFileUpload(event) {
                 const files = event.target.files;
                 if(!files.length) return;
-                // VIP 限制檢查
-                if(this.shopLevel < 99 && (this.previewImages.length + files.length) > 3) {
-                    return window.alert('一般會員最多只能上傳 3 張照片！請升級 VIP。');
-                }
-
+                if(this.shopLevel < 99 && (this.previewImages.length + files.length) > 3) return window.alert('一般會員限傳 3 張照片');
                 this.loading = true;
                 const uploadedUrls = [];
                 for(let file of files) {
-                    const fileExt = file.name.split('.').pop();
-                    const cleanFileName = `products/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    const cleanFileName = `products/${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
                     const { data, error } = await supabaseClient.storage.from('product-images').upload(cleanFileName, file);
                     if(!error) {
                         const { data: { publicUrl } } = supabaseClient.storage.from('product-images').getPublicUrl(cleanFileName);
@@ -430,17 +491,18 @@
             },
             removeImage(idx) { this.previewImages.splice(idx, 1); this.newProduct.images = this.previewImages.join('\n'); },
 
-            // --- 規格新增 (VIP 限制) ---
             addVariant() { 
-                if(this.shopLevel < 99 && this.newProduct.variants.length >= 2) return window.alert('一般會員最多設定 2 種規格！');
+                if(this.shopLevel < 99 && this.newProduct.variants.length >= 2) return window.alert('一般會員限 2 種規格');
                 this.newProduct.variants.push({name:'', price:'', stock:''}); 
             },
 
-            // --- 商品儲存/更新 ---
             async saveProduct() {
-                if(!this.newProduct.name || !this.newProduct.price) return window.alert('名稱與價格必填');
+                if(!this.newProduct.name || !this.newProduct.price) return window.alert('必填欄位未填');
                 this.loading = true;
-                
+                // 計算結束時間
+                const endDate = new Date();
+                endDate.setDate(endDate.getDate() + parseInt(this.newProduct.duration));
+
                 const payload = {
                     shop_id: this.currentShopId,
                     name: this.newProduct.name, description: this.newProduct.description, images: this.newProduct.images,
@@ -451,7 +513,8 @@
                     duration: this.newProduct.duration, target_amount: this.newProduct.targetAmount,
                     bank_info: JSON.stringify(this.newProduct.bank),
                     questions: JSON.stringify(this.newProduct.questions),
-                    total_stock: this.newProduct.variants.reduce((acc,v)=>acc+parseInt(v.stock||0), 0)
+                    total_stock: this.newProduct.variants.reduce((acc,v)=>acc+parseInt(v.stock||0), 0),
+                    end_time: endDate.toISOString() // 寫入結束時間
                 };
 
                 let error;
@@ -459,25 +522,24 @@
                     const { error: e } = await supabaseClient.from('products').update(payload).eq('product_id', this.editingProductId);
                     error = e;
                 } else {
-                    payload.product_id = crypto.randomUUID(); // 新增時產生 UUID
+                    payload.product_id = crypto.randomUUID();
                     const { error: e } = await supabaseClient.from('products').insert(payload);
                     error = e;
                 }
-
                 this.loading = false;
-                if(error) window.alert('錯誤: ' + error.message);
-                else {
-                    window.alert(this.isEditing ? '更新成功' : '上架成功');
-                    this.view = 'admin-home';
-                    this.fetchProducts();
-                }
+                if(error) window.alert(error.message);
+                else { window.alert('成功'); this.view = 'admin-home'; this.fetchProducts(); }
             },
 
-            // 輔助與導航
-            resetForm() {
-                this.newProduct = { name:'', description:'', images:'', price:'', originalPrice:'', variants:[{name:'', price:'', stock:''}], shipping:[], duration:'7', targetAmount:'', bank:{name:'', account:''}, questions:[] };
-                this.previewImages = [];
+            // 優惠券與報表功能
+            async createCoupon() {
+                if(!this.newCoupon.code) return;
+                await supabaseClient.from('coupons').insert({shop_id: this.currentShopId, code: this.newCoupon.code, discount_amount: this.newCoupon.discount});
+                window.alert('建立成功'); this.newCoupon = {code:'', discount:''}; 
             },
+
+            // 一般功能
+            resetForm() { this.newProduct = { name:'', description:'', images:'', price:'', originalPrice:'', variants:[{name:'', price:'', stock:''}], shipping:[], duration:'7', targetAmount:'', bank:{name:'', account:''}, questions:[] }; this.previewImages = []; },
             addShippingRule(type) { if(!this.newProduct.shipping.some(s=>s.name===type)) this.newProduct.shipping.push({name: type, fee: 60, limit: 1}); },
             goToAdmin() { const creds = localStorage.getItem('adminCreds'); this.view = creds ? 'admin-home' : 'admin-login'; },
             async adminLogin() {
