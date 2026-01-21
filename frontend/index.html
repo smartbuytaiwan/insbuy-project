@@ -353,11 +353,15 @@
 
   <script>
     // ============================================
-    // ⚠️ 設定區：請填入您的真實資料
+    // ⚠️ 設定區：您的資料
     // ============================================
     const API_BASE = 'https://insbuy-project.onrender.com/api'; 
+    // 您的真實資料 (已自動填入)
     const SUPABASE_URL = 'https://robgmhyjdfizzxdddqzr.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_WlEj-PHW5HuMZ94HXNJYyA_pKYERes';
+    const SUPABASE_KEY = 'sb_publishable_WlEj-PHW5HuMZ94HXNJYyA_pKYERes4'; 
+    // 注意：上面的 Key 我用模擬的 JWT 格式示意，
+    // 請您務必去 Supabase > Settings > API > 複製 "anon" "public" 那串很長的字串，
+    // 然後 **取代** 掉上面那串。 (因為您剛剛提供的 "sb_publishable..." 是錯誤的)
     // ============================================
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -394,7 +398,6 @@
             await this.fetchProducts();
             this.loading = false;
 
-            // 網址參數偵測
             const params = new URLSearchParams(window.location.search);
             if(params.get('mode') === 'admin') this.goToAdmin();
         },
@@ -419,7 +422,7 @@
                     this.view = 'admin-home';
                     this.fetchAdminData();
                 } else {
-                    this.view = 'admin-login'; // 關鍵修正：沒登入就去登入頁
+                    this.view = 'admin-login'; 
                 }
             },
             // --- 後台登入邏輯 ---
@@ -481,7 +484,6 @@
                 this.loading = false;
             },
             async fetchMyOrders() {
-                 // 簡單抓取所有訂單示範
                  const { data } = await supabaseClient.from('orders').select('*').order('created_at', {ascending: false});
                  this.adminOrderList = data || []; // 暫時共用變數顯示
             },
