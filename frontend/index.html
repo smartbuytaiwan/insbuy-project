@@ -14,9 +14,11 @@
     body { background-color: #FFF1F2; font-family: 'Noto Sans TC', sans-serif; padding-bottom: 0; color: #4a044e; }
     
     /* === UI 優化核心樣式 === */
-    /* 1. 輸入框：預設有邊框，Focus時有光暈 */
     .input-field { 
-        @apply w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm bg-white transition-all duration-300; 
+        @apply w-full h-12 border-2 border-gray-200 rounded-xl px-4 text-base bg-white transition-all duration-300 text-gray-700 flex items-center; 
+    }
+    textarea.input-field {
+        @apply h-32 py-3 leading-relaxed;
     }
     .input-field:focus {
         @apply border-rose-500 ring-4 ring-rose-100 outline-none;
@@ -25,18 +27,12 @@
         @apply border-rose-300;
     }
 
-    /* 2. 按鈕：懸浮時上浮 + 陰影加深 */
     .btn-action { 
-        @apply w-full py-3.5 rounded-xl font-bold text-white shadow-lg shadow-rose-200 transition-all duration-300 text-center block bg-gradient-to-r from-rose-500 to-rose-600 cursor-pointer; 
+        @apply w-full h-14 rounded-xl font-bold text-white shadow-lg shadow-rose-200 transition-all duration-300 text-center flex items-center justify-center text-lg bg-gradient-to-r from-rose-500 to-rose-600 cursor-pointer; 
     }
-    .btn-action:hover {
-        @apply shadow-xl shadow-rose-300 transform -translate-y-1 brightness-110;
-    }
-    .btn-action:active {
-        @apply scale-95;
-    }
+    .btn-action:hover { @apply shadow-xl shadow-rose-300 transform -translate-y-1 brightness-110; }
+    .btn-action:active { @apply scale-95; }
 
-    /* 3. 卡片：懸浮時輕微上浮 */
     .card-hover {
         @apply transition-all duration-300 border border-transparent;
     }
@@ -44,17 +40,13 @@
         @apply shadow-lg transform -translate-y-1 border-rose-100 bg-white;
     }
 
-    /* 後台 Grid Icon */
     .grid-menu-item { 
         @apply flex flex-col items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-rose-100 cursor-pointer transition-all duration-300; 
     }
-    .grid-menu-item:hover {
-        @apply shadow-md border-rose-300 bg-rose-50 transform -translate-y-1;
-    }
+    .grid-menu-item:hover { @apply shadow-md border-rose-300 bg-rose-50 transform -translate-y-1; }
     
-    /* 運費標籤按鈕 */
     .ship-tag { 
-        @apply border border-gray-300 bg-white text-gray-600 rounded-full py-2 px-4 text-xs font-bold transition-all duration-200 cursor-pointer select-none text-center hover:border-rose-400 hover:text-rose-500; 
+        @apply border border-gray-300 bg-white text-gray-600 rounded-full py-2 px-4 text-sm font-bold transition-all duration-200 cursor-pointer select-none text-center hover:border-rose-400 hover:text-rose-500; 
     }
     .ship-tag:active { @apply scale-95; }
 
@@ -62,10 +54,13 @@
     .vip-badge { @apply bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold ml-2 shadow-sm; }
     .free-badge { @apply bg-gray-400 text-white text-[10px] px-2 py-0.5 rounded-full font-bold ml-2; }
 
-    /* 垃圾桶按鈕特效 */
-    .btn-delete {
-        @apply text-gray-300 transition-colors duration-200 p-2 rounded-full hover:bg-red-50 hover:text-red-500 cursor-pointer;
-    }
+    .btn-delete { @apply text-gray-300 transition-colors duration-200 w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 hover:text-red-500 cursor-pointer; }
+    
+    /* 標籤文字 */
+    .label-text { @apply block text-sm font-bold text-gray-600 mb-2; }
+    
+    /* 安全底部 */
+    .safe-pb { padding-bottom: calc(env(safe-area-inset-bottom) + 20px); }
   </style>
 </head>
 <body>
@@ -100,7 +95,7 @@
                     <div class="text-xs text-gray-400 mt-1 font-mono bg-gray-100 px-2 py-0.5 rounded inline-block">ID: {{ currentShopId }}</div>
                 </div>
             </div>
-            <button v-if="shopLevel !== 'vip'" @click="alert('請聯繫客服升級 VIP 以解鎖更多功能！')" class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-full font-bold hover:bg-yellow-200 transition">升級 VIP</button>
+            <button v-if="shopLevel !== 'vip'" @click="window.alert('請聯繫客服升級 VIP 以解鎖更多功能！')" class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-full font-bold hover:bg-yellow-200 transition">升級 VIP</button>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -122,7 +117,7 @@
                 </div>
                 <span class="font-bold text-gray-600 group-hover:text-orange-600">我的報表</span>
             </div>
-            <div @click="view='admin-coupons'" class="grid-menu-item group">
+            <div @click="window.alert('功能開發中')" class="grid-menu-item group">
                 <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-2 group-hover:bg-green-500 group-hover:text-white transition-colors duration-300">
                     <i class="fa-solid fa-ticket text-xl text-green-500 group-hover:text-white"></i>
                 </div>
@@ -142,22 +137,21 @@
                 <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">基本資訊</h3>
                 
                 <div class="mb-5">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">商品名稱 <span class="text-red-500">*</span></label>
-                    <input v-model="newProduct.name" class="input-field text-lg" placeholder="請輸入吸睛的商品標題">
+                    <label class="label-text">商品名稱 <span class="text-red-500">*</span></label>
+                    <input v-model="newProduct.name" class="input-field" placeholder="請輸入商品標題 (例：日本限定零食)">
                 </div>
 
                 <div class="mb-5">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">商品描述</label>
-                    <textarea v-model="newProduct.description" class="input-field h-32 resize-none" placeholder="商品特色、成分、注意事項..."></textarea>
+                    <label class="label-text">商品描述</label>
+                    <textarea v-model="newProduct.description" class="input-field resize-none" placeholder="商品特色、成分、注意事項..."></textarea>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">商品圖片</label>
+                    <label class="label-text">商品圖片</label>
                     <div class="flex flex-col gap-3">
                         <label class="w-full bg-gray-50 border-2 border-dashed border-gray-300 text-gray-400 rounded-xl py-6 flex flex-col items-center justify-center cursor-pointer hover:bg-rose-50 hover:border-rose-400 hover:text-rose-500 transition-all duration-300 group">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 group-hover:scale-110 transition-transform"></i> 
-                            <span class="text-sm font-bold">點擊上傳商品美照</span>
-                            <span class="text-xs mt-1">支援多選 (JPG, PNG)</span>
+                            <span class="text-sm font-bold">點擊上傳照片 (多選)</span>
                             <input type="file" multiple accept="image/*" class="hidden" @change="handleFileUpload">
                         </label>
                         
@@ -175,16 +169,16 @@
                 <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">價格設定</h3>
                 <div class="grid grid-cols-2 gap-5 mb-5">
                     <div>
-                        <label class="text-xs font-bold text-gray-500 mb-2 block">團購價 <span class="text-red-500">*</span></label>
+                        <label class="label-text">團購價 <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <span class="absolute left-3 top-3 text-gray-400">$</span>
+                            <span class="absolute left-3 top-3.5 text-gray-400">$</span>
                             <input v-model="newProduct.price" type="number" class="input-field pl-7 font-bold text-rose-600 text-lg">
                         </div>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-500 mb-2 block">原價</label>
+                        <label class="label-text">原價</label>
                         <div class="relative">
-                            <span class="absolute left-3 top-3 text-gray-400">$</span>
+                            <span class="absolute left-3 top-3.5 text-gray-400">$</span>
                             <input v-model="newProduct.originalPrice" type="number" class="input-field pl-7 text-gray-400">
                         </div>
                     </div>
@@ -193,13 +187,13 @@
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
                     <div class="flex justify-between items-center mb-4">
                         <span class="text-sm font-bold text-gray-700">規格列表</span>
-                        <button @click="addVariant" class="text-xs bg-rose-500 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-rose-600 hover:-translate-y-0.5 transition">+ 新增規格</button>
+                        <button @click="addVariant" class="text-xs bg-rose-500 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-rose-600 transition">+ 新增規格</button>
                     </div>
                     <div class="space-y-3">
                         <div v-for="(v, idx) in newProduct.variants" :key="idx" class="flex gap-2 items-center group">
-                            <input v-model="v.name" class="input-field h-11 text-xs" placeholder="規格名 (如: 紅色)">
-                            <input v-model="v.price" type="number" class="input-field h-11 text-xs w-24 text-center" placeholder="+加價$">
-                            <input v-model="v.stock" type="number" class="input-field h-11 text-xs w-20 text-center" placeholder="庫存">
+                            <input v-model="v.name" class="input-field text-sm" placeholder="規格名">
+                            <input v-model="v.price" type="number" class="input-field text-sm w-24 text-center" placeholder="+加價">
+                            <input v-model="v.stock" type="number" class="input-field text-sm w-24 text-center" placeholder="庫存">
                             <i @click="newProduct.variants.splice(idx,1)" class="fa-solid fa-trash btn-delete"></i>
                         </div>
                     </div>
@@ -210,18 +204,16 @@
                 <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">運送設定</h3>
                 
                 <div class="mb-4">
-                    <label class="block text-xs font-bold text-gray-400 mb-2">點擊新增運送方式：</label>
+                    <label class="label-text text-xs text-gray-400">點擊新增：</label>
                     <div class="flex flex-wrap gap-2">
-                        <div v-for="type in shippingOptions" :key="type" 
-                             @click="addShippingRule(type)"
-                             class="ship-tag">
+                        <div v-for="type in shippingOptions" :key="type" @click="addShippingRule(type)" class="ship-tag">
                             <i class="fa-solid fa-plus mr-1"></i> {{ type }}
                         </div>
                     </div>
                 </div>
 
                 <div v-if="newProduct.shipping.length > 0" class="space-y-3">
-                    <div v-for="(rule, idx) in newProduct.shipping" :key="idx" class="bg-rose-50 border-2 border-rose-100 rounded-xl p-4 relative animate-fade-in hover:border-rose-300 transition">
+                    <div v-for="(rule, idx) in newProduct.shipping" :key="idx" class="bg-rose-50 border-2 border-rose-100 rounded-xl p-4 relative hover:border-rose-300 transition">
                         <div class="flex justify-between items-center mb-3">
                             <div class="text-sm font-black text-rose-700 flex items-center">
                                 <span class="w-6 h-6 bg-rose-200 rounded-full flex items-center justify-center mr-2 text-rose-600 text-xs"><i class="fa-solid fa-truck"></i></span>
@@ -231,22 +223,21 @@
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="text-[10px] text-gray-500 font-bold block mb-1">運費金額 ($)</label>
+                                <label class="text-[10px] text-gray-500 font-bold block mb-1">運費 ($)</label>
                                 <input v-model="rule.fee" type="number" class="input-field h-10 text-sm">
                             </div>
                             <div>
-                                <label class="text-[10px] text-gray-500 font-bold block mb-1">每筆數量限制 (件)</label>
-                                <input v-model="rule.limit" type="number" class="input-field h-10 text-sm" placeholder="如: 10">
+                                <label class="text-[10px] text-gray-500 font-bold block mb-1">每筆數量 (件)</label>
+                                <input v-model="rule.limit" type="number" class="input-field h-10 text-sm" placeholder="10">
                             </div>
                         </div>
                         <div class="text-[10px] text-gray-400 mt-2 flex items-center">
-                            <i class="fa-solid fa-circle-info mr-1"></i>
-                            每 {{ rule.limit || 1 }} 件商品將計算一次運費 ${{ rule.fee }}
+                            <i class="fa-solid fa-circle-info mr-1"></i> 每 {{ rule.limit || 1 }} 件計算一次運費 ${{ rule.fee }}
                         </div>
                     </div>
                 </div>
                 <div v-else class="text-center py-6 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    尚未設定運送方式
+                    請選擇運送方式
                 </div>
             </div>
 
@@ -254,8 +245,8 @@
                 <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">開團設定</h3>
                 <div class="grid grid-cols-2 gap-5">
                     <div>
-                        <label class="text-xs font-bold text-gray-500 mb-2 block">開團天數</label>
-                        <select v-model="newProduct.duration" class="input-field h-12 bg-white cursor-pointer">
+                        <label class="label-text">開團天數</label>
+                        <select v-model="newProduct.duration" class="input-field bg-white cursor-pointer">
                             <option value="1">1 天 (快閃)</option>
                             <option value="3">3 天</option>
                             <option value="5">5 天</option>
@@ -265,10 +256,10 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-500 mb-2 block">目標金額 (選填)</label>
+                        <label class="label-text">目標金額</label>
                         <div class="relative">
                             <span class="absolute left-3 top-3.5 text-gray-400">$</span>
-                            <input v-model="newProduct.targetAmount" type="number" class="input-field h-12 pl-7" placeholder="0">
+                            <input v-model="newProduct.targetAmount" type="number" class="input-field pl-7" placeholder="0">
                         </div>
                     </div>
                 </div>
@@ -292,7 +283,7 @@
                 <h3 class="font-bold text-gray-800 border-l-4 border-rose-500 pl-3 mb-5 text-lg">賣家提問</h3>
                 <div class="space-y-3 mb-3">
                     <div v-for="(q, idx) in newProduct.questions" :key="idx" class="flex gap-2 items-center bg-gray-50 p-3 rounded-xl border border-gray-100 group">
-                        <input v-model="q.title" class="input-field h-10 text-sm border-gray-200" placeholder="問題 (例: 您的 Line ID)">
+                        <input v-model="q.title" class="input-field text-sm border-gray-200" placeholder="問題 (例: 您的 Line ID)">
                         <label class="flex items-center text-xs whitespace-nowrap px-2 cursor-pointer select-none">
                             <input type="checkbox" v-model="q.required" class="mr-1 accent-rose-500"> 必填
                         </label>
@@ -342,6 +333,48 @@
             <p>尚無商品</p>
         </div>
     </div>
+
+    <div v-if="view === 'product' && selectedProduct" class="bg-white min-h-screen pb-32">
+        <div class="relative">
+             <button @click="view='shop'" class="absolute top-4 left-4 z-10 bg-black/30 text-white w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-sm"><i class="fa-solid fa-arrow-left"></i></button>
+             <img :src="selectedProduct.images?.split('\n')[0]" class="w-full h-[400px] object-cover">
+        </div>
+        <div class="p-4">
+             <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ selectedProduct.name }}</h1>
+             <div class="text-gray-500 text-sm mb-4 leading-relaxed whitespace-pre-line">{{ selectedProduct.description }}</div>
+             
+             <table class="w-full text-sm border-collapse border border-gray-200 mb-6 rounded-lg overflow-hidden">
+                 <tr><td class="border border-gray-200 bg-gray-50 p-3 font-bold w-24">單價</td><td class="border border-gray-200 p-3 text-red-600 font-bold">$ {{ selectedProduct.price }}</td></tr>
+                 <tr>
+                     <td class="border border-gray-200 bg-gray-50 p-3 font-bold">規格</td>
+                     <td class="border border-gray-200 p-3">
+                        <select v-model="orderForm.variant" class="input-field h-10 py-1">
+                            <option value="" disabled>請選擇</option>
+                            <option v-for="v in selectedProduct.variants" :value="v.name">{{ v.name }} <span v-if="v.price && v.price>0">(+${{v.price}})</span></option>
+                        </select>
+                     </td>
+                 </tr>
+                 <tr>
+                     <td class="border border-gray-200 bg-gray-50 p-3 font-bold">數量</td>
+                     <td class="border border-gray-200 p-3">
+                         <div class="flex items-center gap-2">
+                             <button @click="orderForm.qty > 1 ? orderForm.qty-- : null" class="w-8 h-8 bg-gray-200 rounded-lg font-bold">-</button>
+                             <span class="w-10 text-center font-bold">{{ orderForm.qty }}</span>
+                             <button @click="orderForm.qty++" class="w-8 h-8 bg-gray-200 rounded-lg font-bold">+</button>
+                         </div>
+                     </td>
+                 </tr>
+             </table>
+        </div>
+        
+        <div class="fixed bottom-0 w-full p-4 bg-white border-t border-gray-200 safe-pb z-[9999] max-w-md mx-auto flex gap-3 items-center shadow-[0_-4px_10px_rgba(0,0,0,0.1)]">
+            <div class="flex-1">
+                <div class="text-xs text-gray-500">總計</div>
+                <div class="text-xl font-bold text-red-600">$ {{ calculateDetailTotal() }}</div>
+            </div>
+            <button @click="addToCart" class="bg-[#F05A28] text-white px-8 py-3 rounded-full font-bold shadow-lg transform active:scale-95 transition">加入購物車</button>
+        </div>
+    </div>
     
     <div v-if="view !== 'product' && view !== 'admin-create'" class="fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-gray-200 flex justify-around py-2 pb-6 z-40 max-w-md mx-auto shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="bottom-nav-item" :class="{active: view==='shop'}" @click="view='shop'"><i class="fa-solid fa-house"></i><span>首頁</span></div>
@@ -353,7 +386,7 @@
 
   <script>
     // ============================================
-    // ⚠️ 設定區
+    // ⚠️ 自動填入您的 Supabase 資料
     // ============================================
     const API_BASE = 'https://insbuy-project.onrender.com/api'; 
     const SUPABASE_URL = 'https://robgmhyjdfizzxdddqzr.supabase.co';
@@ -383,6 +416,10 @@
                     bank: { name: '', account: '' },
                     questions: []
                 },
+                // 商品詳情頁用
+                selectedProduct: null,
+                orderForm: { variant: '', qty: 1 },
+                
                 selectedBankName: '',
                 saveBankInfo: false,
                 commonBanks: ['中國信託 (822)', '國泰世華 (013)', '玉山銀行 (808)', '台新銀行 (812)', '台北富邦 (012)', '郵局 (700)'],
@@ -437,18 +474,33 @@
                 this.previewImages.splice(idx, 1);
                 this.newProduct.images = this.previewImages.join('\n');
             },
+            
+            // 重置表單 (解決問題2：表單殘留)
+            resetForm() {
+                this.newProduct = {
+                    name: '', description: '', images: '', price: '', originalPrice: '',
+                    variants: [{name:'', price:'', stock:''}], 
+                    shipping: [], 
+                    duration: '7', targetAmount: '',
+                    bank: { name: '', account: '' },
+                    questions: []
+                };
+                this.previewImages = [];
+                // 保留銀行資訊
+                const savedBank = localStorage.getItem('savedBank');
+                if(savedBank) { const b = JSON.parse(savedBank); this.newProduct.bank = b; }
+            },
 
             async saveProduct() {
-                if(!this.newProduct.name || !this.newProduct.price) return alert('商品名稱與價格為必填');
+                if(!this.newProduct.name || !this.newProduct.price) return window.alert('商品名稱與價格為必填');
                 this.loading = true;
                 const endDate = new Date();
                 endDate.setDate(endDate.getDate() + parseInt(this.newProduct.duration));
 
                 if(this.saveBankInfo) localStorage.setItem('savedBank', JSON.stringify(this.newProduct.bank));
 
-                // ⚠️ 解決 Null ID 錯誤：前端生成 UUID
                 const payload = {
-                    product_id: crypto.randomUUID(), // 強制生成 ID
+                    product_id: crypto.randomUUID(), 
                     shop_id: this.currentShopId,
                     name: this.newProduct.name,
                     description: this.newProduct.description,
@@ -469,17 +521,16 @@
                 this.loading = false;
                 
                 if(error) {
-                    alert('上架失敗: ' + error.message);
+                    window.alert('上架失敗: ' + error.message);
                 } else {
-                    alert('🎉 商品上架成功！');
+                    window.alert('🎉 商品上架成功！');
+                    this.resetForm(); // 上架成功後清空表單
                     this.view = 'admin-home';
                     this.fetchProducts();
                 }
             },
 
             addVariant() { this.newProduct.variants.push({name:'', price:'', stock:''}); },
-            
-            // 運送方式：新增 (不重複)
             addShippingRule(type) {
                 if(!this.newProduct.shipping.some(s=>s.name===type)) {
                     this.newProduct.shipping.push({name: type, fee: 60, limit: 1});
@@ -494,10 +545,32 @@
                 const { data } = await supabaseClient.from('shops').select('*').eq('email', this.loginForm.email).eq('password', this.loginForm.password).single();
                 this.loading = false;
                 if(data) { localStorage.setItem('adminCreds', JSON.stringify({email: data.email})); this.view = 'admin-home'; this.fetchShopInfo(); } 
-                else { alert('帳號密碼錯誤'); }
+                else { window.alert('帳號密碼錯誤'); }
             },
             logout() { localStorage.removeItem('adminCreds'); this.view='shop'; },
-            openProduct(p) { alert('預覽模式'); }
+            
+            // 解決問題3：商品點擊
+            openProduct(p) { 
+                this.selectedProduct = p; 
+                this.orderForm = { variant: '', qty: 1 };
+                this.view = 'product'; // 切換到詳情頁
+                window.scrollTo(0,0); 
+            },
+            
+            calculateDetailTotal() {
+                if(!this.selectedProduct) return 0;
+                let p = this.selectedProduct.price;
+                if(this.orderForm.variant) {
+                    const v = this.selectedProduct.variants.find(v => v.name === this.orderForm.variant);
+                    if(v && v.price) p += parseInt(v.price);
+                }
+                return p * this.orderForm.qty;
+            },
+            
+            addToCart() {
+                window.alert('已加入購物車 (示範)');
+                this.view = 'shop';
+            }
         }
     }).mount('#app');
   </script>
