@@ -15,46 +15,26 @@
     
     /* === UI 系統 === */
     .input-label { @apply block text-[13px] font-bold text-slate-500 mb-2 ml-1 tracking-wide; }
-    .input-box { 
-        @apply w-full h-[52px] border border-slate-200 rounded-2xl px-4 text-[16px] bg-white transition-all shadow-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none appearance-none text-slate-700; 
-    }
+    .input-box { @apply w-full h-[52px] border border-slate-200 rounded-2xl px-4 text-[16px] bg-white transition-all shadow-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none appearance-none text-slate-700; }
     textarea.input-box { @apply h-32 py-3 leading-relaxed resize-none; }
-    
     .money-wrapper { @apply relative w-full; }
     .money-symbol { @apply absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold z-10 pointer-events-none text-lg; }
     .money-input { @apply pl-9 font-bold text-lg text-rose-600 tracking-wide h-[52px] flex items-center; }
-
-    /* 按鈕系統 */
-    .btn-main { 
-        @apply w-full h-[54px] rounded-2xl font-bold text-white shadow-lg shadow-rose-200/50 transition-all active:scale-95 flex items-center justify-center text-[16px] bg-gradient-to-r from-rose-500 to-rose-600 cursor-pointer hover:shadow-xl hover:-translate-y-0.5; 
-    }
-    .btn-danger {
-        @apply w-full h-[54px] rounded-2xl font-bold text-white shadow-lg shadow-slate-300/50 transition-all duration-200 active:scale-95 flex items-center justify-center text-[16px] bg-slate-500 cursor-pointer; 
-    }
-    .btn-outline {
-        @apply w-full h-[54px] rounded-2xl font-bold text-rose-600 border border-rose-200 bg-white shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center text-[16px] cursor-pointer; 
-    }
-
-    /* 運送方式按鈕 (橢圓 + 發光) */
-    .ship-tag { 
-        @apply border border-slate-200 bg-white text-slate-500 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300 cursor-pointer active:scale-95 select-none shadow-sm flex items-center gap-2 justify-center; 
-    }
+    .btn-main { @apply w-full h-[54px] rounded-2xl font-bold text-white shadow-lg shadow-rose-200/50 transition-all active:scale-95 flex items-center justify-center text-[16px] bg-gradient-to-r from-rose-500 to-rose-600 cursor-pointer hover:shadow-xl hover:-translate-y-0.5; }
+    .btn-danger { @apply w-full h-[54px] rounded-2xl font-bold text-white shadow-lg shadow-slate-300/50 transition-all duration-200 active:scale-95 flex items-center justify-center text-[16px] bg-slate-500 cursor-pointer; }
+    .btn-outline { @apply w-full h-[54px] rounded-2xl font-bold text-rose-600 border border-rose-200 bg-white shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center text-[16px] cursor-pointer; }
+    .ship-tag { @apply border border-slate-200 bg-white text-slate-500 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300 cursor-pointer active:scale-95 select-none shadow-sm flex items-center gap-2 justify-center; }
     .ship-tag:hover { @apply border-rose-300 text-rose-500; }
-    .ship-tag.active { 
-        @apply border-rose-500 bg-rose-50 text-rose-600 shadow-[0_0_15px_rgba(225,29,72,0.3)] transform scale-105; 
-    }
-
+    .ship-tag.active { @apply border-rose-500 bg-rose-50 text-rose-600 shadow-[0_0_15px_rgba(225,29,72,0.3)] transform scale-105; }
     .capsule-tabs { @apply flex gap-3 overflow-x-auto pb-2 mb-4 px-1 no-scrollbar; }
     .capsule-btn { @apply flex-1 py-2.5 px-4 text-center text-xs font-bold rounded-full transition-all duration-300 cursor-pointer select-none border whitespace-nowrap shadow-sm; }
     .capsule-btn.active { @apply bg-rose-600 text-white border-rose-600 shadow-md transform scale-105; }
     .capsule-btn.inactive { @apply bg-white text-slate-500 border-slate-200 hover:border-rose-300; }
-
     .card { @apply bg-white p-5 rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-50 mb-4; }
     .section-header { @apply flex items-center gap-2 mb-4 pb-3 border-b border-slate-50; }
     .section-title { @apply font-bold text-slate-800 text-lg; }
     .tag-btn { @apply border border-slate-200 bg-slate-50 text-slate-500 rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-200 cursor-pointer active:scale-95 select-none hover:bg-white hover:border-slate-300; }
     .tag-btn.active { @apply border-rose-500 bg-rose-50 text-rose-600 shadow-sm; }
-    
     .safe-pb { padding-bottom: calc(env(safe-area-inset-bottom) + 100px); }
     .back-btn { @apply absolute top-3 left-3 z-50 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center backdrop-blur-md shadow-md active:scale-90 transition border border-slate-100; }
     .share-btn { @apply absolute top-3 right-3 z-50 w-10 h-10 bg-white/90 text-rose-600 rounded-full flex items-center justify-center backdrop-blur-md shadow-md active:scale-90 transition border border-rose-100; }
@@ -77,7 +57,6 @@
         </div>
         <div class="flex gap-2">
             <button v-if="view==='shop'" @click="shareLink" class="w-9 h-9 flex items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 transition"><i class="fa-solid fa-share-nodes"></i></button>
-            
             <button v-if="!user" @click="loginBuyer" class="text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full font-bold hover:bg-slate-200">買家登入</button>
             <div v-else class="flex items-center gap-2"><span class="text-xs font-bold text-rose-600">{{ user.email?.split('@')[0] }}</span><button @click="logoutBuyer" class="text-xs text-slate-400">登出</button></div>
         </div>
@@ -85,13 +64,9 @@
 
     <div v-if="view === 'shop'" class="p-4 pb-28 pt-4">
         <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-black text-slate-800">{{ shopName }}</h1>
-                <p class="text-xs text-slate-400 font-mono mt-1">Shop ID: {{ currentShopId }}</p>
-            </div>
+            <div><h1 class="text-2xl font-black text-slate-800">{{ shopName }}</h1><p class="text-xs text-slate-400 font-mono mt-1">Shop ID: {{ currentShopId }}</p></div>
             <div v-if="shopLevel>=99" class="bg-yellow-400 text-slate-900 text-xs px-2 py-1 rounded-lg font-bold shadow-sm">VIP 店家</div>
         </div>
-
         <div v-if="buyerProducts.length > 0" class="grid grid-cols-2 gap-3">
             <div v-for="p in buyerProducts" :key="p.product_id" @click="openProduct(p)" class="card !p-0 !mb-0 overflow-hidden active:scale-[0.98] transition cursor-pointer">
                 <div class="aspect-square bg-slate-100 relative"><img :src="p.images?.split('\n')[0]" class="w-full h-full object-cover"><div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full font-bold">{{ getCountdown(p.end_time) }}</div></div>
@@ -318,7 +293,7 @@
             if(urlParams.get('mode') === 'admin') this.goToAdmin();
         },
         methods: {
-            // --- 核心修復：把 resetForm 方法置於最上方，確保讀取 ---
+            // --- 核心修復：將 resetForm 移至最上方 ---
             resetForm() {
                 this.newProduct = { 
                     name: '', description: '', images: '', price: '', originalPrice: '', stock: '', 
