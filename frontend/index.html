@@ -142,11 +142,33 @@
     <div class="container-fluid py-4 flex-1">
         
         <div v-if="view === 'shop'" class="animate-fade-in">
-            <div class="ai-banner flex items-center justify-center text-[#EE4D2D] font-bold text-3xl">
-                <div class="absolute top-4 left-4 bg-[#EE4D2D] text-white text-xs px-2 py-1 rounded">AI 推薦</div>
-                <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover opacity-80">
-                <div class="absolute bg-white/90 px-6 py-3 rounded shadow-lg backdrop-blur-sm">
-                    🔥 本日熱銷團購 TOP 1
+<div class="mb-4">
+                <div class="flex items-center gap-2 mb-2 px-1 border-l-4 border-[#EE4D2D] pl-2">
+                    <span class="text-[#EE4D2D] font-bold text-lg">🔥 本日熱銷推薦</span>
+                    <span class="text-xs text-slate-400 mt-1">大家都在搶</span>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3 h-[200px]">
+                    <div v-for="(p, idx) in randomTopProducts" :key="p.product_id" @click="openProduct(p)" class="bg-white rounded-sm border border-slate-200 shadow-sm overflow-hidden cursor-pointer hover:border-[#EE4D2D] transition flex flex-col group relative">
+                        <div class="h-[120px] w-full bg-white flex items-center justify-center relative border-b border-slate-50 overflow-hidden">
+                            <img :src="p.images?.split('\n')[0]" class="h-full w-full object-contain group-hover:scale-105 transition duration-300">
+                            <div class="absolute top-0 left-0 bg-[#EE4D2D] text-white text-[10px] px-2 py-0.5 rounded-br-sm font-bold shadow-sm">TOP {{ idx + 1 }}</div>
+                        </div>
+                        <div class="p-2 flex flex-col justify-between flex-1 bg-white">
+                            <div class="text-xs text-slate-800 line-clamp-2 font-medium mb-1 group-hover:text-[#EE4D2D]">{{ p.name }}</div>
+                            <div class="flex justify-between items-end">
+                                <div class="flex items-baseline gap-0.5 text-[#EE4D2D] font-bold">
+                                    <span class="text-xs">$</span><span class="text-base">{{ p.price }}</span>
+                                </div>
+                                <span class="text-[9px] text-slate-400 border px-1 rounded">熱銷中</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div v-if="randomTopProducts.length < 3" class="bg-white rounded-sm border border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-300 h-full">
+                        <i class="fa-solid fa-box-open text-2xl mb-1"></i>
+                        <span class="text-xs">更多好物準備中...</span>
+                    </div>
                 </div>
             </div>
 
