@@ -145,23 +145,21 @@
                 </div>
             </div>
 
-            <div class="fixed bottom-4 right-4 z-[999] flex flex-col gap-3 items-end">
+            <div class="fixed bottom-6 right-6 z-[999] flex flex-col gap-3 items-end">
+        <div @click="goToAdmin" class="w-12 h-12 bg-[#EE4D2D] rounded-full shadow-lg border-2 border-white flex flex-col items-center justify-center cursor-pointer hover:bg-[#d73211] transition transform hover:scale-105 active:scale-95" title="商家後台">
+            <i class="fa-solid fa-store text-white text-lg"></i>
+            <span class="text-[9px] text-white font-bold mt-[-2px]">賣家</span>
+        </div>
         
-        <div @click="goToAdmin" class="w-12 h-12 bg-white rounded-full shadow-lg border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition transform hover:scale-105 group relative">
-            <i class="fa-solid fa-store text-slate-600 text-lg group-hover:text-[#EE4D2D]"></i>
-            <span class="text-[9px] text-slate-500 font-bold mt-[-2px] group-hover:text-[#EE4D2D]">賣家</span>
+        <div @click="changeView('shop')" class="w-12 h-12 bg-[#EE4D2D] rounded-full shadow-lg border-2 border-white flex flex-col items-center justify-center cursor-pointer hover:bg-[#d73211] transition transform hover:scale-105 active:scale-95" title="回首頁">
+            <i class="fa-solid fa-house text-white text-lg"></i>
+            <span class="text-[9px] text-white font-bold mt-[-2px]">首頁</span>
         </div>
-
-        <div @click="changeView('shop')" class="w-12 h-12 bg-white rounded-full shadow-lg border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition transform hover:scale-105 group relative">
-            <i class="fa-solid fa-house text-slate-600 text-lg group-hover:text-[#EE4D2D]"></i>
-            <span class="text-[9px] text-slate-500 font-bold mt-[-2px] group-hover:text-[#EE4D2D]">首頁</span>
+        
+        <div @click="shopLineId ? openLine() : alert('賣家未設定Line')" class="w-12 h-12 bg-[#EE4D2D] rounded-full shadow-lg border-2 border-white flex flex-col items-center justify-center cursor-pointer hover:bg-[#d73211] transition transform hover:scale-105 active:scale-95 animate-bounce-slow" title="LINE 聊聊">
+            <i class="fa-brands fa-line text-white text-xl"></i>
+            <span class="text-[9px] text-white font-bold mt-[-2px]">聊聊</span>
         </div>
-
-        <div @click="shopLineId ? openLine() : alert('賣家未設定Line')" class="w-24 h-10 bg-[#EE4D2D] rounded-t-lg rounded-bl-lg shadow-lg flex items-center justify-center gap-2 cursor-pointer hover:bg-[#d73211] transition transform hover:scale-105 text-white border-2 border-white">
-            <i class="fa-regular fa-comments text-lg"></i>
-            <span class="font-bold text-sm">聊聊</span>
-        </div>
-
     </div>
 
             <div v-if="sortedProducts.length > 0">
