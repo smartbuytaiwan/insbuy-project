@@ -102,7 +102,15 @@
                 <i class="fa-solid fa-bag-shopping text-4xl mr-2"></i> 拍拍購 </div>
             <div class="flex-1 relative">
                 <div class="search-bar">
-                    <input v-model="searchQuery" class="flex-1 px-4 text-base outline-none text-slate-700 h-full bg-transparent" placeholder="搜尋商品...">
+                    <div class="w-full max-w-md mx-auto border border-slate-300 rounded-lg flex items-center bg-white overflow-hidden">
+  
+  <input 
+    v-model="searchQuery" 
+    class="flex-1 px-4 py-2 text-base outline-none text-slate-700 bg-transparent" 
+    placeholder="搜尋商品..."
+  >
+
+  </div>
                     <button class="bg-[#EE4D2D] w-16 h-full rounded-sm text-white hover:opacity-90 flex items-center justify-center transition shadow-sm m-0">
                         <i class="fa-solid fa-magnifying-glass text-lg"></i>
                     </button>
