@@ -34,10 +34,11 @@
     .top-bar { @apply bg-[#d0011b] text-white text-[12px] py-1.5; }
     .top-bar-link { @apply hover:opacity-80 cursor-pointer flex items-center gap-1; }
     
-    /* 頭部搜尋區 (Header) */
-    .main-header { @apply bg-[#EE4D2D] py-4 sticky top-0 z-50 shadow-md; }
-    .search-bar { @apply bg-white rounded-sm p-1 flex shadow-sm h-[40px] w-full max-w-2xl mx-auto; }
-    .logo-text { @apply text-white font-black text-2xl italic tracking-tighter flex items-center gap-2 cursor-pointer; }
+/* 頭部搜尋區 (Header - 蝦皮比例) */
+    .main-header { @apply bg-[#EE4D2D] py-5 sticky top-0 z-50 shadow-md; } /* 增加上下 padding */
+    /* 搜尋欄本體：加高到 48px，寬度最大化 */
+    .search-bar { @apply bg-white rounded-sm p-1 flex shadow-sm h-[48px] w-full max-w-4xl mx-auto; }
+    .logo-text { @apply text-white font-black text-3xl italic tracking-tighter flex items-center gap-2 cursor-pointer mr-4; } /* Logo 加大 */
     
     /* 商品網格系統 */
     .product-grid { @apply grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3; }
