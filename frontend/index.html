@@ -57,9 +57,14 @@
     .select-tag.active { @apply border-[#EE4D2D] text-[#EE4D2D] bg-[#FFEEEC] font-bold relative; }
     .select-tag.active::after { content:'✓'; @apply absolute bottom-0 right-0 text-[8px] bg-[#EE4D2D] text-white px-0.5 leading-none rounded-tl-sm; }
 
-    /* AI 廣告 */
-    .ai-banner { @apply w-full aspect-[3/1] md:aspect-[4/1] bg-gradient-to-r from-orange-100 to-rose-200 rounded-sm mb-4 relative overflow-hidden shadow-sm; }
-
+/* 首頁廣告看板 (蝦皮公告風格 - 窄版 + 右側推薦) */
+    .hero-section { @apply grid grid-cols-3 gap-1 mb-4 h-[120px]; }
+    .main-banner { @apply col-span-2 relative overflow-hidden rounded-sm cursor-pointer shadow-sm; }
+    .side-banners { @apply col-span-1 flex flex-col gap-1 h-full; }
+    
+    /* 右側小圖樣式 */
+    .sub-banner { @apply flex-1 relative overflow-hidden rounded-sm cursor-pointer shadow-sm bg-white border border-transparent hover:border-[#EE4D2D] transition flex items-center px-2; }
+    .sub-banner img { @apply w-12 h-12 object-contain mr-2 bg-slate-50; }
     /* 頁面切換動畫 */
     .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
     .fade-enter-from, .fade-leave-to { opacity: 0; }
