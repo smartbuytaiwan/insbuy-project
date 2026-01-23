@@ -34,11 +34,12 @@
     .top-bar { @apply bg-[#d0011b] text-white text-[12px] py-1.5; }
     .top-bar-link { @apply hover:opacity-80 cursor-pointer flex items-center gap-1; }
     
-/* 頭部搜尋區 (Header - 蝦皮比例) */
-    .main-header { @apply bg-[#EE4D2D] py-5 sticky top-0 z-50 shadow-md; } /* 增加上下 padding */
-    /* 搜尋欄本體：加高到 48px，寬度最大化 */
+    /* 頭部搜尋區 (Header - 蝦皮電腦版比例修正) */
+    .main-header { @apply bg-[#EE4D2D] py-5 sticky top-0 z-50 shadow-md; } 
+    /* 搜尋欄：高度加到 48px，寬度最大化 */
     .search-bar { @apply bg-white rounded-sm p-1 flex shadow-sm h-[48px] w-full max-w-4xl mx-auto; }
-    .logo-text { @apply text-white font-black text-3xl italic tracking-tighter flex items-center gap-2 cursor-pointer mr-4; } /* Logo 加大 */
+    /* Logo：字體加大，增加右邊距 */
+    .logo-text { @apply text-white font-black text-3xl italic tracking-tighter flex items-center gap-2 cursor-pointer mr-8; }
     
     /* 商品網格系統 */
     .product-grid { @apply grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3; }
@@ -97,18 +98,16 @@
     </div>
 
     <div class="main-header">
-        <div class="container-fluid flex items-center gap-6">
-            <div class="logo-text shrink-0" @click="changeView('shop')">
-                <i class="fa-solid fa-bag-shopping"></i> 拍拍購
-            </div>
+        <div class="container-fluid flex items-center gap-8"> <div class="logo-text shrink-0" @click="changeView('shop')">
+                <i class="fa-solid fa-bag-shopping text-4xl mr-2"></i> 拍拍購 </div>
             <div class="flex-1 relative">
                 <div class="search-bar">
-                    <input v-model="searchQuery" class="flex-1 px-4 text-base outline-none text-slate-700 h-full" placeholder="搜尋商品...">
-                    <button class="bg-[#EE4D2D] w-16 h-[40px] m-[3px] rounded-sm text-white hover:opacity-90 flex items-center justify-center transition shadow-sm">
+                    <input v-model="searchQuery" class="flex-1 px-4 text-base outline-none text-slate-700 h-full bg-transparent" placeholder="搜尋商品...">
+                    <button class="bg-[#EE4D2D] w-16 h-full rounded-sm text-white hover:opacity-90 flex items-center justify-center transition shadow-sm m-0">
                         <i class="fa-solid fa-magnifying-glass text-lg"></i>
                     </button>
                 </div>
-                <div class="absolute top-11 left-0 flex gap-3 text-[11px] text-white/80 w-full overflow-hidden whitespace-nowrap">
+                <div class="absolute top-14 left-0 flex gap-3 text-[11px] text-white/80 w-full overflow-hidden whitespace-nowrap">
                     <span class="cursor-pointer hover:text-white">年貨大街</span>
                     <span class="cursor-pointer hover:text-white">免運</span>
                     <span class="cursor-pointer hover:text-white">iPhone 16</span>
@@ -116,7 +115,7 @@
                 </div>
             </div>
             <div class="shrink-0 relative cursor-pointer text-white hover:opacity-90" @click="changeView('cart')">
-                <i class="fa-solid fa-cart-shopping text-3xl"></i>
+                <i class="fa-solid fa-cart-shopping text-4xl"></i>
                 <span v-if="cart.length>0" class="absolute -top-1 -right-2 bg-white text-[#EE4D2D] text-xs px-1.5 rounded-full font-bold border border-[#EE4D2D]">{{cart.length}}</span>
             </div>
         </div>
@@ -359,10 +358,12 @@
             <i class="fa-solid fa-store text-white text-lg"></i>
             <span class="text-[9px] text-white font-bold mt-[-2px]">賣家</span>
         </div>
+        
         <div @click="changeView('shop')" class="w-12 h-12 bg-[#EE4D2D] rounded-full shadow-lg border-2 border-white flex flex-col items-center justify-center cursor-pointer hover:bg-[#d73211] transition transform hover:scale-105 active:scale-95" title="回首頁">
             <i class="fa-solid fa-house text-white text-lg"></i>
             <span class="text-[9px] text-white font-bold mt-[-2px]">首頁</span>
         </div>
+        
         <div @click="shopLineId ? openLine() : alert('賣家未設定Line')" class="w-12 h-12 bg-[#EE4D2D] rounded-full shadow-lg border-2 border-white flex flex-col items-center justify-center cursor-pointer hover:bg-[#d73211] transition transform hover:scale-105 active:scale-95 animate-bounce-slow" title="LINE 聊聊">
             <i class="fa-brands fa-line text-white text-xl"></i>
             <span class="text-[9px] text-white font-bold mt-[-2px]">聊聊</span>
@@ -474,7 +475,6 @@
             updateOrderStatus(order) { supabaseClient.from('orders').update({ status: order.status }).eq('order_id', order.order_id).then(e => { if(!e.error) alert('已更新'); }); },
             editProduct(p) { this.isEditing = true; this.editingProductId = p.product_id; this.editingProductStatus = p.status; this.newProduct = { name: p.name, description: p.description, images: p.images, price: p.price, originalPrice: p.original_price, stock: p.total_stock, is_pinned: p.is_pinned, variants: typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants, shipping: typeof p.shipping_rules === 'string' ? JSON.parse(p.shipping_rules) : p.shipping_rules, duration: p.duration, targetAmount: p.target_amount, bank: typeof p.bank_info === 'string' ? JSON.parse(p.bank_info) : p.bank_info || {name:'', account:''}, questions: typeof p.questions === 'string' ? JSON.parse(p.questions) : p.questions || [] }; this.previewImages = p.images ? p.images.split('\n') : []; this.changeView('admin-create'); },
             
-            checkAutoClose() { this.products.forEach(p => { if (p.status === 'OPEN' && p.end_time && new Date(p.end_time).getTime() < Date.now()) { supabaseClient.from('products').update({status: 'CLOSED'}).eq('product_id', p.product_id); p.status = 'CLOSED'; } }); },
             async handleFileUpload(event) { const files = event.target.files; if(!files.length) return; this.loading = true; const uploadedUrls = []; for(let file of files) { const cleanFileName = `products/${Date.now()}_${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`; const { data, error } = await supabaseClient.storage.from('product-images').upload(cleanFileName, file); if(!error) { const { data: { publicUrl } } = supabaseClient.storage.from('product-images').getPublicUrl(cleanFileName); uploadedUrls.push(publicUrl); } } this.previewImages = [...this.previewImages, ...uploadedUrls]; this.newProduct.images = this.previewImages.join('\n'); this.loading = false; },
             
             addShippingRule(type) { if(!this.newProduct.shipping.some(s=>s.name===type)) this.newProduct.shipping.push({name: type, fee: null, limit: null}); },
