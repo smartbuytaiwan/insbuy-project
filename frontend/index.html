@@ -103,8 +103,10 @@
             </div>
             <div class="flex-1 relative">
                 <div class="search-bar">
-                    <input v-model="searchQuery" class="flex-1 px-3 text-sm outline-none text-slate-700" placeholder="搜尋商品...">
-                    <button class="bg-[#EE4D2D] w-14 m-0.5 rounded-sm text-white hover:opacity-90"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <input v-model="searchQuery" class="flex-1 px-4 text-base outline-none text-slate-700 h-full" placeholder="搜尋商品...">
+                    <button class="bg-[#EE4D2D] w-16 h-[40px] m-[3px] rounded-sm text-white hover:opacity-90 flex items-center justify-center transition shadow-sm">
+                        <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                    </button>
                 </div>
                 <div class="absolute top-11 left-0 flex gap-3 text-[11px] text-white/80 w-full overflow-hidden whitespace-nowrap">
                     <span class="cursor-pointer hover:text-white">年貨大街</span>
